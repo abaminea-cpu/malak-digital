@@ -1032,39 +1032,14 @@ function LandingTab() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-border/60 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <Label className="text-base">Sections ({sections.length})</Label>
-                  <Select onValueChange={(v) => addSection(v)}>
-                    <SelectTrigger className="w-48"><SelectValue placeholder="+ Ajouter section" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="benefits">Bénéfices</SelectItem>
-                      <SelectItem value="testimonials">Témoignages</SelectItem>
-                      <SelectItem value="faq">FAQ</SelectItem>
-                      <SelectItem value="gallery">Galerie</SelectItem>
-                      <SelectItem value="video">Vidéo</SelectItem>
-                      <SelectItem value="guarantee">Garantie</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  {sections.map((s, i) => (
-                    <div key={i} className="rounded-md border border-border bg-surface p-3">
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="text-xs font-semibold uppercase text-gold">{s.type}</span>
-                        <Button type="button" size="icon" variant="ghost" onClick={() => setSections(sections.filter((_, idx) => idx !== i))}><Trash2 className="h-3 w-3 text-destructive" /></Button>
-                      </div>
-                      <Input className="mb-2" value={s.title ?? ""} onChange={(e) => setSections(sections.map((x, idx) => idx === i ? { ...x, title: e.target.value } : x))} placeholder="Titre section" />
-                      <Textarea rows={4} className="font-mono text-xs" value={JSON.stringify(s.items ?? s.content ?? "", null, 2)} onChange={(e) => {
-                        try {
-                          const parsed = JSON.parse(e.target.value);
-                          setSections(sections.map((x, idx) => idx === i ? { ...x, ...(Array.isArray(parsed) ? { items: parsed } : { content: parsed }) } : x));
-                        } catch {}
-                      }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <LandingSectionsEditor sections={sections as any} onChange={(s) => setSections(s as any)} />
+
+              {editing?.slug && (
+                <a href={`/lp/${editing.slug}`} target="_blank" rel="noreferrer" className="block text-center text-xs text-gold hover:underline">
+                  👁 Aperçu de la landing publiée (/lp/{editing.slug})
+                </a>
+              )}
+
 
               <div className="grid gap-3 md:grid-cols-2">
                 <div><Label>Meta title</Label><Input name="meta_title" defaultValue={editing?.meta_title ?? ""} maxLength={200} /></div>

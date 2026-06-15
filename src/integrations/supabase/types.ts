@@ -442,6 +442,8 @@ export type Database = {
           notes: string | null
           order_number: string
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_status: string
+          shipment_id: string | null
           shipped_at: string | null
           shipping_cost: number
           shipping_method: Database["public"]["Enums"]["shipping_method"]
@@ -475,6 +477,8 @@ export type Database = {
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: string
+          shipment_id?: string | null
           shipped_at?: string | null
           shipping_cost?: number
           shipping_method?: Database["public"]["Enums"]["shipping_method"]
@@ -508,6 +512,8 @@ export type Database = {
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: string
+          shipment_id?: string | null
           shipped_at?: string | null
           shipping_cost?: number
           shipping_method?: Database["public"]["Enums"]["shipping_method"]
@@ -525,6 +531,13 @@ export type Database = {
             columns: ["coupon_id"]
             isOneToOne: false
             referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
             referencedColumns: ["id"]
           },
           {
@@ -699,6 +712,8 @@ export type Database = {
           is_active: boolean
           is_featured: boolean
           landing_mode: boolean
+          low_stock_alerted_at: string | null
+          low_stock_threshold: number
           meta_description: string | null
           meta_title: string | null
           name: string
@@ -722,6 +737,8 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           landing_mode?: boolean
+          low_stock_alerted_at?: string | null
+          low_stock_threshold?: number
           meta_description?: string | null
           meta_title?: string | null
           name: string
@@ -745,6 +762,8 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           landing_mode?: boolean
+          low_stock_alerted_at?: string | null
+          low_stock_threshold?: number
           meta_description?: string | null
           meta_title?: string | null
           name?: string
@@ -801,6 +820,89 @@ export type Database = {
         }
         Relationships: []
       }
+      shipments: {
+        Row: {
+          created_at: string
+          external_id: string | null
+          id: string
+          label_url: string | null
+          last_event_at: string | null
+          order_id: string
+          provider_code: string
+          raw: Json | null
+          shipping_cost: number | null
+          status: string
+          tracking_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          label_url?: string | null
+          last_event_at?: string | null
+          order_id: string
+          provider_code: string
+          raw?: Json | null
+          shipping_cost?: number | null
+          status?: string
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          label_url?: string | null
+          last_event_at?: string | null
+          order_id?: string
+          provider_code?: string
+          raw?: Json | null
+          shipping_cost?: number | null
+          status?: string
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_providers: {
+        Row: {
+          code: string
+          config: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           key: string
@@ -818,6 +920,64 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          order_id: string | null
+          product_id: string | null
+          quantity: number
+          reason: string | null
+          type: string
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          quantity: number
+          reason?: string | null
+          type: string
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          quantity?: number
+          reason?: string | null
+          type?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

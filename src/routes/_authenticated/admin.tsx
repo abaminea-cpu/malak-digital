@@ -23,8 +23,10 @@ import {
 } from "@/lib/admin.functions";
 import { adminUpsertCategoryFn, adminDeleteCategoryFn, adminReplaceVariantsFn } from "@/lib/catalog.functions";
 import { adminUpsertPostFn, adminDeletePostFn, adminUpsertBlogCategoryFn, adminDeleteBlogCategoryFn } from "@/lib/blog.functions";
+import { adminUpsertLandingFn, adminDeleteLandingFn } from "@/lib/landing.functions";
+import { adminUpdateOrderCRMFn, adminListAbandonedFn, adminUpdateAbandonedFn, adminCustomer360Fn, adminUpsertPixelsFn } from "@/lib/crm.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
-import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Malak Digital" }, { name: "robots", content: "noindex" }] }),
@@ -64,16 +66,22 @@ function AdminPage() {
             <TabsTrigger value="products">Produits</TabsTrigger>
             <TabsTrigger value="categories">Catégories</TabsTrigger>
             <TabsTrigger value="orders">Commandes</TabsTrigger>
+            <TabsTrigger value="crm">CRM</TabsTrigger>
+            <TabsTrigger value="landing">Landing</TabsTrigger>
             <TabsTrigger value="shipping">Livraison</TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
+            <TabsTrigger value="marketing">Marketing</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-6"><DashboardTab /></TabsContent>
           <TabsContent value="products" className="mt-6"><ProductsTab /></TabsContent>
           <TabsContent value="categories" className="mt-6"><CategoriesTab /></TabsContent>
           <TabsContent value="orders" className="mt-6"><OrdersTab /></TabsContent>
+          <TabsContent value="crm" className="mt-6"><CRMTab /></TabsContent>
+          <TabsContent value="landing" className="mt-6"><LandingTab /></TabsContent>
           <TabsContent value="shipping" className="mt-6"><ShippingTab /></TabsContent>
           <TabsContent value="blog" className="mt-6"><BlogTab /></TabsContent>
+          <TabsContent value="marketing" className="mt-6"><MarketingTab /></TabsContent>
         </Tabs>
       </main>
       <Footer />
@@ -687,6 +695,454 @@ function BlogCategoriesAdmin() {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// ====== CRM TAB ======
+const CRM_STATUSES = [
+  { id: "new", label: "Nouveau" },
+  { id: "confirmed", label: "Confirmé" },
+  { id: "preparing", label: "Préparé" },
+  { id: "shipped", label: "Expédié" },
+  { id: "delivered", label: "Livré" },
+  { id: "cancelled", label: "Annulé" },
+  { id: "returned", label: "Retourné" },
+] as const;
+
+function CRMTab() {
+  const list = useServerFn(adminListOrdersFn);
+  const { data: orders = [] } = useQuery({ queryKey: ["crm-orders"], queryFn: () => list({}) });
+  return (
+    <Tabs defaultValue="kanban">
+      <TabsList>
+        <TabsTrigger value="kanban">Pipeline</TabsTrigger>
+        <TabsTrigger value="abandoned">Paniers abandonnés</TabsTrigger>
+        <TabsTrigger value="customer">Client 360°</TabsTrigger>
+      </TabsList>
+      <TabsContent value="kanban" className="mt-4"><KanbanBoard orders={orders as any[]} /></TabsContent>
+      <TabsContent value="abandoned" className="mt-4"><AbandonedList /></TabsContent>
+      <TabsContent value="customer" className="mt-4"><Customer360 /></TabsContent>
+    </Tabs>
+  );
+}
+
+function KanbanBoard({ orders }: { orders: any[] }) {
+  const qc = useQueryClient();
+  const update = useServerFn(adminUpdateOrderCRMFn);
+  const [selected, setSelected] = useState<any | null>(null);
+
+  async function move(o: any, status: string) {
+    try { await update({ data: { id: o.id, status: status as any } }); toast.success("Déplacé"); qc.invalidateQueries({ queryKey: ["crm-orders"] }); qc.invalidateQueries({ queryKey: ["admin-orders"] }); }
+    catch (e: any) { toast.error(e.message); }
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        {CRM_STATUSES.map((col) => {
+          const items = orders.filter((o) => o.status === col.id);
+          return (
+            <div key={col.id} className="rounded-xl border border-border/60 bg-card p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{col.label}</span>
+                <span className="rounded-full bg-surface px-2 py-0.5 text-xs text-gold">{items.length}</span>
+              </div>
+              <div className="space-y-2">
+                {items.map((o) => (
+                  <button key={o.id} onClick={() => setSelected(o)} className="w-full rounded-lg border border-border bg-surface p-3 text-start text-xs hover:border-gold/40">
+                    <div className="font-mono text-gold">{o.order_number}</div>
+                    <div className="mt-1 font-medium text-foreground">{o.customer_first_name} {o.customer_last_name}</div>
+                    <div className="text-muted-foreground">{o.customer_phone}</div>
+                    <div className="mt-1 flex items-center justify-between">
+                      <span className="text-muted-foreground">{o.wilayas?.name_fr}</span>
+                      <span className="text-gold">{formatDA(Number(o.total))}</span>
+                    </div>
+                    {o.call_attempts > 0 && <div className="mt-1 text-[10px] text-muted-foreground">📞 {o.call_attempts} tentative{o.call_attempts > 1 ? "s" : ""}</div>}
+                  </button>
+                ))}
+                {items.length === 0 && <div className="py-6 text-center text-xs text-muted-foreground">—</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <Dialog open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
+        <DialogContent className="max-w-2xl">
+          {selected && (
+            <>
+              <DialogHeader><DialogTitle>{selected.order_number}</DialogTitle></DialogHeader>
+              <div className="space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Client</Label><div className="text-foreground">{selected.customer_first_name} {selected.customer_last_name}</div></div>
+                  <div><Label>Téléphone</Label><a href={`tel:${selected.customer_phone}`} className="block text-gold">{selected.customer_phone}</a></div>
+                  <div><Label>Wilaya</Label><div>{selected.wilayas?.name_fr} — {selected.commune}</div></div>
+                  <div><Label>Total</Label><div className="text-gold">{formatDA(Number(selected.total))}</div></div>
+                </div>
+                <div>
+                  <Label>Articles</Label>
+                  <div className="space-y-1 text-xs">
+                    {(selected.order_items ?? []).map((it: any) => (
+                      <div key={it.id} className="flex justify-between"><span>{it.product_name} × {it.quantity}</span><span>{formatDA(Number(it.line_total))}</span></div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label>Statut</Label>
+                  <Select defaultValue={selected.status} onValueChange={(v) => move(selected, v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{CRM_STATUSES.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>N° de suivi</Label>
+                  <Input defaultValue={selected.tracking_number ?? ""} placeholder="Tracking" id={`tn-${selected.id}`} />
+                  <Button size="sm" variant="outline" className="mt-2" onClick={async () => {
+                    const v = (document.getElementById(`tn-${selected.id}`) as HTMLInputElement).value;
+                    await update({ data: { id: selected.id, tracking_number: v } });
+                    toast.success("Suivi enregistré");
+                  }}>Enregistrer</Button>
+                </div>
+                <div>
+                  <Label>Notes internes</Label>
+                  <Textarea id={`notes-${selected.id}`} rows={3} defaultValue={selected.internal_notes ?? ""} />
+                  <Button size="sm" variant="outline" className="mt-2" onClick={async () => {
+                    const v = (document.getElementById(`notes-${selected.id}`) as HTMLTextAreaElement).value;
+                    await update({ data: { id: selected.id, internal_notes: v } });
+                    toast.success("Notes enregistrées");
+                  }}>Enregistrer</Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <a href={`tel:${selected.customer_phone}`}><Button size="sm" variant="outline" onClick={() => update({ data: { id: selected.id, increment_call: true } }).catch(() => {})}><Phone className="me-2 h-3 w-3" /> Appeler</Button></a>
+                  <a target="_blank" rel="noreferrer" href={`https://wa.me/${selected.customer_phone.replace(/[^0-9]/g, "")}`}><Button size="sm" variant="outline"><MessageCircle className="me-2 h-3 w-3" /> WhatsApp</Button></a>
+                </div>
+                <div className="text-xs text-muted-foreground">Tentatives: {selected.call_attempts ?? 0} · Dernier contact: {selected.last_contact_at ? new Date(selected.last_contact_at).toLocaleString("fr-FR") : "—"}</div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function AbandonedList() {
+  const qc = useQueryClient();
+  const list = useServerFn(adminListAbandonedFn);
+  const update = useServerFn(adminUpdateAbandonedFn);
+  const { data: items = [] } = useQuery({ queryKey: ["abandoned"], queryFn: () => list({}) });
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border/60">
+      <table className="w-full text-sm">
+        <thead className="bg-surface text-xs uppercase text-muted-foreground">
+          <tr><th className="p-3 text-start">Client</th><th className="p-3 text-start">Téléphone</th><th className="p-3 text-start">Wilaya</th><th className="p-3">Montant</th><th className="p-3">Statut</th><th className="p-3">Tentatives</th><th className="p-3"></th></tr>
+        </thead>
+        <tbody>
+          {(items as any[]).map((a) => (
+            <tr key={a.id} className="border-t border-border/60">
+              <td className="p-3">{a.customer_first_name} {a.customer_last_name}</td>
+              <td className="p-3 text-xs">{a.customer_phone}</td>
+              <td className="p-3 text-xs">{a.wilayas?.name_fr ?? "—"}</td>
+              <td className="p-3 text-center text-gold">{formatDA(Number(a.subtotal))}</td>
+              <td className="p-3 text-center">
+                <Select defaultValue={a.status} onValueChange={async (v) => { await update({ data: { id: a.id, status: v as any } }); qc.invalidateQueries({ queryKey: ["abandoned"] }); }}>
+                  <SelectTrigger className="h-8 w-32 mx-auto"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">Nouveau</SelectItem>
+                    <SelectItem value="contacted">Contacté</SelectItem>
+                    <SelectItem value="recovered">Récupéré</SelectItem>
+                    <SelectItem value="lost">Perdu</SelectItem>
+                  </SelectContent>
+                </Select>
+              </td>
+              <td className="p-3 text-center text-xs">{a.recovery_attempts}</td>
+              <td className="p-3 text-end">
+                <a target="_blank" rel="noreferrer" href={`https://wa.me/${a.customer_phone.replace(/[^0-9]/g, "")}`} onClick={async () => { await update({ data: { id: a.id, increment_attempt: true } }); qc.invalidateQueries({ queryKey: ["abandoned"] }); }}>
+                  <Button size="sm" variant="outline"><MessageCircle className="me-1 h-3 w-3" /> Relancer</Button>
+                </a>
+              </td>
+            </tr>
+          ))}
+          {items.length === 0 && <tr><td colSpan={7} className="p-10 text-center text-muted-foreground">Aucun panier abandonné.</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Customer360() {
+  const search = useServerFn(adminCustomer360Fn);
+  const [phone, setPhone] = useState("");
+  const [result, setResult] = useState<any | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function go() {
+    if (phone.length < 6) return;
+    setLoading(true);
+    try { setResult(await search({ data: { phone } })); } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
+  }
+
+  return (
+    <div>
+      <div className="mb-6 flex gap-2">
+        <Input placeholder="Téléphone client (ex: 0555...)" value={phone} onChange={(e) => setPhone(e.target.value)} className="max-w-sm" />
+        <Button onClick={go} disabled={loading} className="bg-gradient-gold text-primary-foreground">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="me-2 h-4 w-4" /> Rechercher</>}
+        </Button>
+      </div>
+      {result && (
+        <div className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-border/60 bg-card p-4"><div className="text-xs text-muted-foreground">Commandes</div><div className="font-display text-2xl text-gold">{result.orderCount}</div></div>
+            <div className="rounded-xl border border-border/60 bg-card p-4"><div className="text-xs text-muted-foreground">Total dépensé (livrées)</div><div className="font-display text-2xl text-gold">{formatDA(result.totalSpent)}</div></div>
+            <div className="rounded-xl border border-border/60 bg-card p-4"><div className="text-xs text-muted-foreground">Téléphone</div><div className="font-mono">{phone}</div></div>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-border/60">
+            <table className="w-full text-sm">
+              <thead className="bg-surface text-xs uppercase text-muted-foreground"><tr><th className="p-3 text-start">N°</th><th className="p-3 text-start">Date</th><th className="p-3">Wilaya</th><th className="p-3">Total</th><th className="p-3">Statut</th></tr></thead>
+              <tbody>
+                {result.orders.map((o: any) => (
+                  <tr key={o.id} className="border-t border-border/60">
+                    <td className="p-3 font-mono text-xs text-gold">{o.order_number}</td>
+                    <td className="p-3 text-xs">{new Date(o.created_at).toLocaleDateString("fr-FR")}</td>
+                    <td className="p-3 text-xs text-center">{o.wilayas?.name_fr}</td>
+                    <td className="p-3 text-center">{formatDA(Number(o.total))}</td>
+                    <td className="p-3 text-center text-xs">{o.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ====== LANDING TAB ======
+function LandingTab() {
+  const qc = useQueryClient();
+  const upsert = useServerFn(adminUpsertLandingFn);
+  const del = useServerFn(adminDeleteLandingFn);
+  const { data: pages = [] } = useQuery({
+    queryKey: ["admin-landings"],
+    queryFn: async () => (await supabase.from("landing_pages").select("*, products(name)").order("created_at", { ascending: false })).data ?? [],
+  });
+  const { data: products = [] } = useQuery({
+    queryKey: ["admin-products-min"],
+    queryFn: async () => (await supabase.from("products").select("id, name").order("name")).data ?? [],
+  });
+
+  const [editing, setEditing] = useState<any | null>(null);
+  const [open, setOpen] = useState(false);
+  const [productId, setProductId] = useState("");
+  const [theme, setTheme] = useState<"gold-dark" | "minimal-light" | "urgent-red">("gold-dark");
+  const [heroImage, setHeroImage] = useState<string | null>(null);
+  const [sections, setSections] = useState<any[]>([]);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [countdownEnd, setCountdownEnd] = useState("");
+  const [published, setPublished] = useState(false);
+
+  function openNew() {
+    setEditing(null); setProductId(""); setTheme("gold-dark"); setHeroImage(null); setSections([]); setShowCountdown(false); setCountdownEnd(""); setPublished(false); setOpen(true);
+  }
+  function openEdit(p: any) {
+    setEditing(p); setProductId(p.product_id); setTheme(p.theme); setHeroImage(p.hero_image); setSections(p.sections ?? []); setShowCountdown(p.show_countdown); setCountdownEnd(p.countdown_end?.slice(0, 16) ?? ""); setPublished(p.is_published); setOpen(true);
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    if (!productId) { toast.error("Choisissez un produit"); return; }
+    try {
+      await upsert({ data: {
+        id: editing?.id,
+        product_id: productId,
+        slug: String(f.get("slug") || "").toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, ""),
+        title: String(f.get("title") || ""),
+        hero_title: String(f.get("hero_title") || ""),
+        hero_subtitle: String(f.get("hero_subtitle") || ""),
+        hero_image: heroImage || "",
+        cta_text: String(f.get("cta_text") || "Commander maintenant"),
+        sections,
+        show_countdown: showCountdown,
+        countdown_end: countdownEnd ? new Date(countdownEnd).toISOString() : null,
+        theme,
+        meta_title: String(f.get("meta_title") || ""),
+        meta_description: String(f.get("meta_description") || ""),
+        is_published: published,
+      } });
+      toast.success("Landing enregistrée");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-landings"] });
+    } catch (err: any) { toast.error(err.message); }
+  }
+
+  function addSection(type: string) {
+    const defaults: any = {
+      benefits: { type, title: "Pourquoi nous", items: [{ title: "Bénéfice 1", description: "Description" }] },
+      testimonials: { type, title: "Avis clients", items: [{ name: "Amine", city: "Alger", rating: 5, text: "Super produit !" }] },
+      faq: { type, title: "Questions fréquentes", items: [{ q: "Question ?", a: "Réponse." }] },
+      gallery: { type, title: "Galerie", items: [] },
+      video: { type, title: "Vidéo", content: "https://www.youtube.com/embed/VIDEO_ID" },
+      guarantee: { type, title: "Garantie", content: "Satisfait ou remboursé 7 jours." },
+    };
+    setSections([...sections, defaults[type]]);
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex justify-end">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild><Button onClick={openNew} className="bg-gradient-gold text-primary-foreground"><Plus className="me-2 h-4 w-4" /> Nouvelle landing</Button></DialogTrigger>
+          <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+            <DialogHeader><DialogTitle>{editing ? "Modifier" : "Nouvelle"} landing page</DialogTitle></DialogHeader>
+            <form onSubmit={onSubmit} className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div><Label>Titre admin *</Label><Input name="title" required defaultValue={editing?.title} maxLength={200} /></div>
+                <div><Label>Slug URL *</Label><Input name="slug" required defaultValue={editing?.slug} placeholder="offre-speciale" maxLength={160} /></div>
+              </div>
+              <div>
+                <Label>Produit *</Label>
+                <Select value={productId} onValueChange={setProductId}>
+                  <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                  <SelectContent>{(products as any[]).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div><Label>Titre hero</Label><Input name="hero_title" defaultValue={editing?.hero_title ?? ""} maxLength={200} /></div>
+                <div><Label>Texte du bouton</Label><Input name="cta_text" defaultValue={editing?.cta_text ?? "Commander maintenant"} maxLength={80} /></div>
+              </div>
+              <div><Label>Sous-titre hero</Label><Textarea name="hero_subtitle" rows={2} defaultValue={editing?.hero_subtitle ?? ""} maxLength={400} /></div>
+              <div><Label>Image hero</Label><SingleImageUploader bucket="product-images" value={heroImage} onChange={setHeroImage} /></div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <Label>Thème</Label>
+                  <Select value={theme} onValueChange={(v) => setTheme(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gold-dark">Gold Dark</SelectItem>
+                      <SelectItem value="minimal-light">Minimal Light</SelectItem>
+                      <SelectItem value="urgent-red">Urgent Red</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 pt-6">
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={showCountdown} onChange={(e) => setShowCountdown(e.target.checked)} /> <span className="text-sm">Compte à rebours</span></label>
+                  {showCountdown && <Input type="datetime-local" value={countdownEnd} onChange={(e) => setCountdownEnd(e.target.value)} />}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border/60 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <Label className="text-base">Sections ({sections.length})</Label>
+                  <Select onValueChange={(v) => addSection(v)}>
+                    <SelectTrigger className="w-48"><SelectValue placeholder="+ Ajouter section" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="benefits">Bénéfices</SelectItem>
+                      <SelectItem value="testimonials">Témoignages</SelectItem>
+                      <SelectItem value="faq">FAQ</SelectItem>
+                      <SelectItem value="gallery">Galerie</SelectItem>
+                      <SelectItem value="video">Vidéo</SelectItem>
+                      <SelectItem value="guarantee">Garantie</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  {sections.map((s, i) => (
+                    <div key={i} className="rounded-md border border-border bg-surface p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-xs font-semibold uppercase text-gold">{s.type}</span>
+                        <Button type="button" size="icon" variant="ghost" onClick={() => setSections(sections.filter((_, idx) => idx !== i))}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                      </div>
+                      <Input className="mb-2" value={s.title ?? ""} onChange={(e) => setSections(sections.map((x, idx) => idx === i ? { ...x, title: e.target.value } : x))} placeholder="Titre section" />
+                      <Textarea rows={4} className="font-mono text-xs" value={JSON.stringify(s.items ?? s.content ?? "", null, 2)} onChange={(e) => {
+                        try {
+                          const parsed = JSON.parse(e.target.value);
+                          setSections(sections.map((x, idx) => idx === i ? { ...x, ...(Array.isArray(parsed) ? { items: parsed } : { content: parsed }) } : x));
+                        } catch {}
+                      }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div><Label>Meta title</Label><Input name="meta_title" defaultValue={editing?.meta_title ?? ""} maxLength={200} /></div>
+                <div><Label>Meta description</Label><Input name="meta_description" defaultValue={editing?.meta_description ?? ""} maxLength={300} /></div>
+              </div>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} /> <span className="text-sm">Publier</span></label>
+              <Button type="submit" className="w-full bg-gradient-gold text-primary-foreground">Enregistrer</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-border/60">
+        <table className="w-full text-sm">
+          <thead className="bg-surface text-xs uppercase text-muted-foreground">
+            <tr><th className="p-3 text-start">Titre</th><th className="p-3 text-start">Produit</th><th className="p-3">Thème</th><th className="p-3">Statut</th><th className="p-3"></th></tr>
+          </thead>
+          <tbody>
+            {(pages as any[]).map((p) => (
+              <tr key={p.id} className="border-t border-border/60">
+                <td className="p-3"><div className="font-medium">{p.title}</div><a href={`/lp/${p.slug}`} target="_blank" rel="noreferrer" className="text-xs text-gold hover:underline">/lp/{p.slug}</a></td>
+                <td className="p-3 text-xs">{p.products?.name}</td>
+                <td className="p-3 text-center text-xs">{p.theme}</td>
+                <td className="p-3 text-center"><span className={`text-xs ${p.is_published ? "text-success" : "text-muted-foreground"}`}>{p.is_published ? "Publié" : "Brouillon"}</span></td>
+                <td className="p-3 text-end">
+                  <Button size="icon" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={async () => { if (confirm("Supprimer ?")) { await del({ data: { id: p.id } }); toast.success("Supprimée"); qc.invalidateQueries({ queryKey: ["admin-landings"] }); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </td>
+              </tr>
+            ))}
+            {pages.length === 0 && <tr><td colSpan={5} className="p-10 text-center text-muted-foreground">Aucune landing page.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ====== MARKETING TAB ======
+function MarketingTab() {
+  const upsert = useServerFn(adminUpsertPixelsFn);
+  const { data, refetch } = useQuery({
+    queryKey: ["pixels-settings"],
+    queryFn: async () => (await supabase.from("site_settings").select("value").eq("key", "pixels").maybeSingle()).data?.value as any ?? {},
+  });
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    try {
+      await upsert({ data: {
+        meta_pixel_id: String(f.get("meta_pixel_id") || ""),
+        tiktok_pixel_id: String(f.get("tiktok_pixel_id") || ""),
+        ga4_measurement_id: String(f.get("ga4_measurement_id") || ""),
+        gtm_id: String(f.get("gtm_id") || ""),
+        snap_pixel_id: String(f.get("snap_pixel_id") || ""),
+      } });
+      toast.success("Pixels enregistrés (rechargez pour activer)");
+      refetch();
+    } catch (e: any) { toast.error(e.message); }
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-6 rounded-xl border border-gold/30 bg-gold/5 p-4 text-sm">
+        <p className="font-medium text-gold">Pixels marketing</p>
+        <p className="mt-1 text-muted-foreground">Collez les identifiants. Les scripts sont chargés automatiquement et les événements e-commerce (ViewContent, AddToCart, InitiateCheckout, Purchase) sont envoyés en DZD.</p>
+      </div>
+      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-border/60 bg-card p-6">
+        <div><Label>Meta Pixel ID (Facebook + Instagram)</Label><Input name="meta_pixel_id" defaultValue={data?.meta_pixel_id ?? ""} placeholder="123456789012345" maxLength={40} /></div>
+        <div><Label>TikTok Pixel ID</Label><Input name="tiktok_pixel_id" defaultValue={data?.tiktok_pixel_id ?? ""} placeholder="C0XXXXX..." maxLength={40} /></div>
+        <div><Label>Google Analytics 4 (GA4)</Label><Input name="ga4_measurement_id" defaultValue={data?.ga4_measurement_id ?? ""} placeholder="G-XXXXXXXXXX" maxLength={40} /></div>
+        <div><Label>Google Tag Manager</Label><Input name="gtm_id" defaultValue={data?.gtm_id ?? ""} placeholder="GTM-XXXXXX" maxLength={40} /></div>
+        <div><Label>Snapchat Pixel ID</Label><Input name="snap_pixel_id" defaultValue={data?.snap_pixel_id ?? ""} maxLength={40} /></div>
+        <Button type="submit" className="w-full bg-gradient-gold text-primary-foreground">Enregistrer</Button>
+      </form>
     </div>
   );
 }

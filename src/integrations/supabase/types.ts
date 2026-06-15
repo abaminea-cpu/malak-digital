@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_checkouts: {
+        Row: {
+          commune: string | null
+          created_at: string
+          customer_email: string | null
+          customer_first_name: string | null
+          customer_last_name: string | null
+          customer_phone: string
+          id: string
+          items: Json
+          last_contact_at: string | null
+          notes: string | null
+          recovered_order_id: string | null
+          recovery_attempts: number
+          status: string
+          subtotal: number
+          updated_at: string
+          user_id: string | null
+          wilaya_id: number | null
+        }
+        Insert: {
+          commune?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_first_name?: string | null
+          customer_last_name?: string | null
+          customer_phone: string
+          id?: string
+          items?: Json
+          last_contact_at?: string | null
+          notes?: string | null
+          recovered_order_id?: string | null
+          recovery_attempts?: number
+          status?: string
+          subtotal?: number
+          updated_at?: string
+          user_id?: string | null
+          wilaya_id?: number | null
+        }
+        Update: {
+          commune?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_first_name?: string | null
+          customer_last_name?: string | null
+          customer_phone?: string
+          id?: string
+          items?: Json
+          last_contact_at?: string | null
+          notes?: string | null
+          recovered_order_id?: string | null
+          recovery_attempts?: number
+          status?: string
+          subtotal?: number
+          updated_at?: string
+          user_id?: string | null
+          wilaya_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_checkouts_recovered_order_id_fkey"
+            columns: ["recovered_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "abandoned_checkouts_wilaya_id_fkey"
+            columns: ["wilaya_id"]
+            isOneToOne: false
+            referencedRelation: "wilayas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_categories: {
         Row: {
           created_at: string
@@ -177,6 +252,74 @@ export type Database = {
           },
         ]
       }
+      landing_pages: {
+        Row: {
+          countdown_end: string | null
+          created_at: string
+          cta_text: string | null
+          hero_image: string | null
+          hero_subtitle: string | null
+          hero_title: string | null
+          id: string
+          is_published: boolean
+          meta_description: string | null
+          meta_title: string | null
+          product_id: string
+          sections: Json
+          show_countdown: boolean
+          slug: string
+          theme: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          countdown_end?: string | null
+          created_at?: string
+          cta_text?: string | null
+          hero_image?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
+          id?: string
+          is_published?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          product_id: string
+          sections?: Json
+          show_countdown?: boolean
+          slug: string
+          theme?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          countdown_end?: string | null
+          created_at?: string
+          cta_text?: string | null
+          hero_image?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
+          id?: string
+          is_published?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          product_id?: string
+          sections?: Json
+          show_countdown?: boolean
+          slug?: string
+          theme?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landing_pages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -231,66 +374,93 @@ export type Database = {
       orders: {
         Row: {
           address: string | null
+          assigned_to: string | null
+          call_attempts: number
+          cancelled_at: string | null
           commune: string
+          confirmed_at: string | null
           created_at: string
           customer_email: string | null
           customer_first_name: string
           customer_last_name: string
           customer_phone: string
           customer_phone_alt: string | null
+          delivered_at: string | null
           id: string
+          internal_notes: string | null
+          last_contact_at: string | null
           notes: string | null
           order_number: string
           payment_method: Database["public"]["Enums"]["payment_method"]
+          shipped_at: string | null
           shipping_cost: number
           shipping_method: Database["public"]["Enums"]["shipping_method"]
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
           total: number
+          tracking_number: string | null
           updated_at: string
           user_id: string | null
           wilaya_id: number
         }
         Insert: {
           address?: string | null
+          assigned_to?: string | null
+          call_attempts?: number
+          cancelled_at?: string | null
           commune: string
+          confirmed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_first_name: string
           customer_last_name: string
           customer_phone: string
           customer_phone_alt?: string | null
+          delivered_at?: string | null
           id?: string
+          internal_notes?: string | null
+          last_contact_at?: string | null
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          shipped_at?: string | null
           shipping_cost?: number
           shipping_method?: Database["public"]["Enums"]["shipping_method"]
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           total?: number
+          tracking_number?: string | null
           updated_at?: string
           user_id?: string | null
           wilaya_id: number
         }
         Update: {
           address?: string | null
+          assigned_to?: string | null
+          call_attempts?: number
+          cancelled_at?: string | null
           commune?: string
+          confirmed_at?: string | null
           created_at?: string
           customer_email?: string | null
           customer_first_name?: string
           customer_last_name?: string
           customer_phone?: string
           customer_phone_alt?: string | null
+          delivered_at?: string | null
           id?: string
+          internal_notes?: string | null
+          last_contact_at?: string | null
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          shipped_at?: string | null
           shipping_cost?: number
           shipping_method?: Database["public"]["Enums"]["shipping_method"]
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
           total?: number
+          tracking_number?: string | null
           updated_at?: string
           user_id?: string | null
           wilaya_id?: number

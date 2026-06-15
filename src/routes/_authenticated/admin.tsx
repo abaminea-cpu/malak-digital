@@ -25,8 +25,10 @@ import { adminUpsertCategoryFn, adminDeleteCategoryFn, adminReplaceVariantsFn } 
 import { adminUpsertPostFn, adminDeletePostFn, adminUpsertBlogCategoryFn, adminDeleteBlogCategoryFn } from "@/lib/blog.functions";
 import { adminUpsertLandingFn, adminDeleteLandingFn } from "@/lib/landing.functions";
 import { adminUpdateOrderCRMFn, adminListAbandonedFn, adminUpdateAbandonedFn, adminCustomer360Fn, adminUpsertPixelsFn } from "@/lib/crm.functions";
+import { adminListCouponsFn, adminUpsertCouponFn, adminDeleteCouponFn } from "@/lib/coupons.functions";
+import { adminListAllReviewsFn, adminSetReviewStatusFn } from "@/lib/engagement.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
-import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search, Star, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Malak Digital" }, { name: "robots", content: "noindex" }] }),
@@ -71,6 +73,8 @@ function AdminPage() {
             <TabsTrigger value="shipping">Livraison</TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
             <TabsTrigger value="marketing">Marketing</TabsTrigger>
+            <TabsTrigger value="promo">Promo</TabsTrigger>
+            <TabsTrigger value="reviews">Avis</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-6"><DashboardTab /></TabsContent>
@@ -82,6 +86,8 @@ function AdminPage() {
           <TabsContent value="shipping" className="mt-6"><ShippingTab /></TabsContent>
           <TabsContent value="blog" className="mt-6"><BlogTab /></TabsContent>
           <TabsContent value="marketing" className="mt-6"><MarketingTab /></TabsContent>
+          <TabsContent value="promo" className="mt-6"><PromoTab /></TabsContent>
+          <TabsContent value="reviews" className="mt-6"><ReviewsTab /></TabsContent>
         </Tabs>
       </main>
       <Footer />

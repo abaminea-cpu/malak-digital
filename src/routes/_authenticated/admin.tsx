@@ -28,6 +28,7 @@ import { adminUpdateOrderCRMFn, adminListAbandonedFn, adminUpdateAbandonedFn, ad
 import { adminListCouponsFn, adminUpsertCouponFn, adminDeleteCouponFn } from "@/lib/coupons.functions";
 import { adminListAllReviewsFn, adminSetReviewStatusFn } from "@/lib/engagement.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
+import { LandingSectionsEditor } from "@/components/admin/LandingSectionsEditor";
 import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search, Star, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({

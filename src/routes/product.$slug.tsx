@@ -122,8 +122,9 @@ function ProductPage() {
     );
   }
 
+  const unitPrice = Number(product.price) + (variant ? Number(variant.price_delta) : 0);
   const shippingCost = !wilaya ? 0 : Number(shipping === "home" ? wilaya.home_price : wilaya.office_price);
-  const subtotal = Number(product.price) * qty;
+  const subtotal = unitPrice * qty;
   const total = subtotal + shippingCost;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -132,9 +133,11 @@ function ProductPage() {
     const form = new FormData(e.currentTarget);
 
     if (!wilayaId) { toast.error("Veuillez sélectionner une wilaya"); return; }
+    if (variants.length > 0 && !variantId) { toast.error("Veuillez choisir une variante"); return; }
 
     setSubmitting(true);
     try {
+      const variantLabel = variant ? ` — ${variant.name}` : "";
       const result = await createOrder({
         data: {
           items: [{ product_id: product.id, quantity: qty }],
@@ -147,7 +150,7 @@ function ProductPage() {
           commune: String(form.get("commune") || ""),
           address: String(form.get("address") || ""),
           shipping_method: shipping,
-          notes: String(form.get("notes") || ""),
+          notes: `${variantLabel}\n${String(form.get("notes") || "")}`.trim(),
         },
       });
       toast.success(t("checkout.success"), { description: `${t("checkout.success_desc")} (${result.order_number})` });
@@ -158,6 +161,7 @@ function ProductPage() {
       setSubmitting(false);
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col">

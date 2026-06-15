@@ -154,7 +154,7 @@ function ProductsTab() {
           price: Number(f.get("price") || 0),
           compare_at_price: f.get("compare_at_price") ? Number(f.get("compare_at_price")) : null,
           stock: Number(f.get("stock") || 0),
-          category_id: categoryId || null,
+          category_id: categoryId && categoryId !== "__none" ? categoryId : null,
           images,
           video_url: String(f.get("video_url") || "") || null,
           is_active: f.get("is_active") === "on",

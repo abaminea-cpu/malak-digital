@@ -28,7 +28,7 @@ export const adminUpdateOrderCRMFn = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, any> = {};
+    const patch: any = {};
     if (data.status) {
       patch.status = data.status;
       const ts = STATUS_TIMESTAMPS[data.status];
@@ -73,7 +73,7 @@ export const adminUpdateAbandonedFn = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, any> = {};
+    const patch: any = {};
     if (data.status) patch.status = data.status;
     if (data.notes !== undefined) patch.notes = data.notes;
     if (data.increment_attempt) {

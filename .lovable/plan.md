@@ -5,126 +5,106 @@ Stack: TanStack Start + React 19 + Tailwind v4 + Lovable Cloud (Postgres + Auth 
 
 ---
 
-## Phase 1 — Fondations ✅ (terminée)
+## ✅ Phase 1 — Fondations (terminée)
 
-**Livré :**
-- Charte premium dark gold (palette, typo Cormorant + Inter + Tajawal, gradients dorés)
-- i18n FR / AR (RTL) / EN avec sélecteur dans le header
-- Schéma DB : `products`, `categories`, `brands`, `orders`, `order_items`, `wilayas` (58 préchargées), `profiles`, `user_roles`, `site_settings`
+- Charte premium dark gold (palette, typo Cormorant + Inter + Tajawal)
+- i18n FR / AR (RTL) / EN
+- Schéma DB de base : `products`, `categories`, `brands`, `orders`, `order_items`, `wilayas` (58), `profiles`, `user_roles`, `site_settings`
 - Auth Lovable Cloud (email + Google), rôles `admin` / `customer`
 - Pages publiques : Accueil, Boutique, Produit, À propos, Contact, Auth
-- Checkout COD (Cash On Delivery) avec calcul livraison par wilaya
-- Compte client, espace admin (Produits / Commandes / Livraison)
-- SEO de base : titres, descriptions, OG, sitemap.xml, robots.txt
+- Checkout COD avec calcul livraison par wilaya
+- Compte client + espace admin (Produits / Commandes / Livraison)
+- SEO de base, sitemap, robots
 
 ---
 
-## Phase 2A — Catalogue avancé + Blog ✅ (terminée)
+## ✅ Phase 2A — Catalogue avancé + Blog (terminée)
 
-**Livré :**
-- **Variantes produit** (`product_variants`) : taille / couleur / option2, prix delta, stock par variante, image
-- **Catégories hiérarchiques** (`parent_id`) avec pages `/categorie/$slug`
-- **Upload d'images** (drag & drop) via Storage Cloud — buckets `product-images` + `blog-images` privés avec URLs signées 10 ans
-- **Blog complet** : `blog_posts` (Markdown + GFM), `blog_categories`, filtres + recherche, SEO/JSON-LD par article
-- **Admin** : éditeur variantes, gestionnaire catégories, éditeur Markdown blog
-
----
-
-## Phase 2B — Landing Pages + Pixels + CRM ⚙️ (en cours)
-
-**Objectif :** transformer la plateforme en machine à conversion.
-
-### 2B.1 — Landing Pages produit (1 produit = 1 page optimisée)
-- Table `landing_pages` : `product_id`, hero (titre/sous-titre/image), `sections` (JSONB), `cta_text`, compte à rebours, thème, SEO
-- Route publique `/lp/$slug` (indépendante du `/product/$slug` classique)
-- Sections modulaires : Hero plein écran, Bénéfices, Témoignages, FAQ, Galerie, Formulaire COD intégré, Comparatif
-- Compte à rebours d'urgence (countdown) optionnel
-- Thèmes prédéfinis (gold-dark, minimal-light, urgent-red)
-- Création / édition depuis l'admin
-
-### 2B.2 — Pixels marketing & tracking
-- Clés stockées dans `site_settings.pixels` :
-  - Meta Pixel (Facebook + Instagram)
-  - TikTok Pixel
-  - Google Analytics 4 (GA4)
-  - Google Tag Manager (GTM)
-  - Snapchat Pixel
-- Provider React qui injecte les scripts uniquement si une clé est définie
-- Helper `trackEvent()` côté client pour les événements e-commerce standards :
-  - `PageView` (auto)
-  - `ViewContent` (page produit/landing)
-  - `AddToCart`
-  - `InitiateCheckout`
-  - `Purchase` (page order-confirmed avec valeur + currency DZD)
-- Configuration depuis l'admin (onglet Marketing)
-
-### 2B.3 — CRM & gestion clients
-- Champs CRM ajoutés sur `orders` : `confirmed_at`, `shipped_at`, `delivered_at`, `cancelled_at`, `internal_notes`, `assigned_to`, `call_attempts`, `last_contact_at`, `tracking_number`
-- **Pipeline Kanban** : Nouveau → Tenté → Confirmé → Préparé → Expédié → Livré (+ Annulé / Retourné)
-- Vue **Client 360°** : historique commandes par numéro de téléphone, total dépensé, notes
-- Table `abandoned_checkouts` : capture automatique quand un visiteur remplit son tel sans valider, relance manuelle WhatsApp en 1 clic
-- Compteur de tentatives d'appel + date du dernier contact
+- Variantes produit (`product_variants`) : taille / couleur, prix delta, stock, image
+- Catégories hiérarchiques avec pages `/categorie/$slug`
+- Upload d'images drag & drop (Storage : `product-images`, `blog-images`)
+- Blog complet (Markdown + GFM), catégories, recherche, SEO/JSON-LD
+- Admin : éditeur variantes, gestionnaire catégories, éditeur Markdown
 
 ---
 
-## Phase 3 — Conversion & engagement (à venir)
+## ✅ Phase 2B — Landing Pages + Pixels + CRM (terminée)
 
-### 3.1 — Éditeur visuel de pages
-- Builder drag & drop pour créer Home / Landing sans code
-- Bibliothèque de blocs (hero, grille produits, témoignages, bandeau urgence, FAQ, vidéo, formulaire)
-- Sauvegarde versionnée
+- Landing Pages produit `/lp/$slug` avec sections modulaires + countdown + 3 thèmes
+- Pixels : Meta, TikTok, GA4, GTM, Snapchat + helper `trackEvent()` (DZD)
+- CRM : champs `confirmed_at / shipped_at / delivered_at / call_attempts...`
+- Kanban pipeline 7 étapes, Client 360°, abandons + relance WhatsApp 1 clic
 
-### 3.2 — Marketing automation
-- **Codes promo** : `coupons` (% ou fixe, dates, limite usage, produits ciblés)
-- **Upsell / Cross-sell** : produits suggérés au checkout, bundles
-- **Reviews clients** avec photos, modération admin
-- **Wishlist** persistante
+---
 
-### 3.3 — Notifications multi-canal
+## ⚙️ Phase 3 — Conversion & engagement (EN COURS)
+
+### 3A — Marketing automation (en cours)
+- **Codes promo** : table `coupons` (% ou fixe, min, dates, limite usage), validation au checkout, suivi `coupon_id` + `discount_amount` sur `orders`
+- **Avis clients** : table `product_reviews` (note 1-5, photo, modération admin), affichage moyenne + JSON-LD `AggregateRating`
+- **Wishlist** : table `wishlists` par utilisateur, bouton cœur sur fiches produit
+- **Upsell / Cross-sell** : table `product_upsells`, suggestions au checkout
+
+### 3B — Éditeur visuel de pages (à venir)
+- Builder drag & drop (blocs hero, grille, témoignages, urgence, FAQ, vidéo)
+- Bibliothèque de templates par secteur
+- Sauvegarde versionnée + preview
+
+### 3C — Notifications multi-canal (à venir)
 - Email transactionnel (Resend) : confirmation, expédition, livraison
-- SMS Algérie (provider à choisir)
-- WhatsApp Business API pour relances commerciales
-- Notifications admin temps réel (nouvelle commande → son + toast)
+- SMS Algérie (provider à choisir : NetBeOpen / IdoomSMS)
+- WhatsApp Business API (relances commerciales)
+- Notifications admin temps réel (toast + son)
 
 ---
 
-## Phase 4 — Logistique & opérations (à venir)
+## 🚚 Phase 4 — Logistique & paiement (à venir)
 
-### 4.1 — Intégrations livreurs Algérie
-- Yalidine, Zr Express, Maystro, EcoTrack (au choix)
-- Création bordereau automatique depuis l'admin
+### 4A — Intégrations livreurs Algérie
+- Yalidine, Zr Express, Maystro, EcoTrack
+- Création bordereau auto depuis l'admin
 - Sync statut + numéro de suivi
+- Calcul tarifs dynamique par wilaya/commune
 
-### 4.2 — Paiement électronique
+### 4B — Paiement électronique
 - BaridiMob (Algérie Poste)
 - CIB / Edahabia (SATIM)
-- Garde COD comme défaut
+- Garde COD comme défaut + UI de choix au checkout
 
-### 4.3 — Gestion stock avancée
+### 4C — Gestion stock avancée
 - Multi-entrepôts
-- Alertes seuil critique
-- Historique mouvements
-- Import/export CSV
+- Alertes seuil critique (email + dashboard)
+- Historique mouvements stock
+- Import / export CSV produits + commandes
 
 ---
 
-## Phase 5 — Performance, sécurité, scale (à venir)
+## ⚡ Phase 5 — Performance, sécurité, scale (à venir)
 
 - Lazy loading images + composants
-- CDN Cloudflare pour assets
-- Compression WebP/AVIF automatique
-- Cache intelligent (SWR loaders + Query)
+- CDN Cloudflare pour assets statiques
+- Compression WebP / AVIF automatique
+- Cache intelligent (SWR loaders + TanStack Query)
 - Optimisation Core Web Vitals (LCP < 2.5s, CLS < 0.1)
-- Audit sécurité RLS complet
+- Audit RLS complet + pen-test basique
 - Rate limiting endpoints publics
-- Backups automatiques
+- Backups automatiques quotidiens
+- Monitoring uptime + alerting
 
 ---
 
-## Phase 6 — Avancé (optionnel)
+## 🚀 Phase 6 — Avancé (optionnel)
 
-- App mobile (React Native ou PWA installable)
-- Centre d'aide / Documentation publique
-- Programme de fidélité (points, paliers)
-- Multi-vendeurs (marketplace)
-- IA : suggestions produits, génération descriptions, chat support
+- **PWA installable** (app mobile sans stores)
+- **App mobile native** (React Native, optionnel)
+- **Centre d'aide / Documentation publique**
+- **Programme de fidélité** (points, paliers, récompenses)
+- **Multi-vendeurs** (marketplace)
+- **IA** :
+  - Suggestions produits personnalisées
+  - Génération automatique de descriptions produit (FR/AR)
+  - Chat support 24/7
+  - Détection commandes frauduleuses
+- **Analytics avancé** : cohortes, LTV, attribution multi-touch
+- **A/B testing intégré** sur landing pages
+- **Multi-devises** (DZD / EUR / USD) pour export

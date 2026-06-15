@@ -252,6 +252,54 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_order_amount: number | null
+          starts_at: string | null
+          type: Database["public"]["Enums"]["coupon_type"]
+          updated_at: string
+          used_count: number
+          value: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          starts_at?: string | null
+          type?: Database["public"]["Enums"]["coupon_type"]
+          updated_at?: string
+          used_count?: number
+          value: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number | null
+          starts_at?: string | null
+          type?: Database["public"]["Enums"]["coupon_type"]
+          updated_at?: string
+          used_count?: number
+          value?: number
+        }
+        Relationships: []
+      }
       landing_pages: {
         Row: {
           countdown_end: string | null
@@ -379,6 +427,7 @@ export type Database = {
           cancelled_at: string | null
           commune: string
           confirmed_at: string | null
+          coupon_id: string | null
           created_at: string
           customer_email: string | null
           customer_first_name: string
@@ -386,6 +435,7 @@ export type Database = {
           customer_phone: string
           customer_phone_alt: string | null
           delivered_at: string | null
+          discount_amount: number
           id: string
           internal_notes: string | null
           last_contact_at: string | null
@@ -410,6 +460,7 @@ export type Database = {
           cancelled_at?: string | null
           commune: string
           confirmed_at?: string | null
+          coupon_id?: string | null
           created_at?: string
           customer_email?: string | null
           customer_first_name: string
@@ -417,6 +468,7 @@ export type Database = {
           customer_phone: string
           customer_phone_alt?: string | null
           delivered_at?: string | null
+          discount_amount?: number
           id?: string
           internal_notes?: string | null
           last_contact_at?: string | null
@@ -441,6 +493,7 @@ export type Database = {
           cancelled_at?: string | null
           commune?: string
           confirmed_at?: string | null
+          coupon_id?: string | null
           created_at?: string
           customer_email?: string | null
           customer_first_name?: string
@@ -448,6 +501,7 @@ export type Database = {
           customer_phone?: string
           customer_phone_alt?: string | null
           delivered_at?: string | null
+          discount_amount?: number
           id?: string
           internal_notes?: string | null
           last_contact_at?: string | null
@@ -467,10 +521,106 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "orders_wilaya_id_fkey"
             columns: ["wilaya_id"]
             isOneToOne: false
             referencedRelation: "wilayas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_reviews: {
+        Row: {
+          author_name: string
+          comment: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          product_id: string
+          rating: number
+          status: Database["public"]["Enums"]["review_status"]
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          author_name: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          product_id: string
+          rating: number
+          status?: Database["public"]["Enums"]["review_status"]
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          author_name?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          product_id?: string
+          rating?: number
+          status?: Database["public"]["Enums"]["review_status"]
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_upsells: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          product_id: string
+          suggested_product_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          product_id: string
+          suggested_product_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          product_id?: string
+          suggested_product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_upsells_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_upsells_suggested_product_id_fkey"
+            columns: ["suggested_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -723,6 +873,35 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -738,6 +917,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "customer"
+      coupon_type: "percentage" | "fixed"
       order_status:
         | "new"
         | "confirmed"
@@ -748,6 +928,7 @@ export type Database = {
         | "returned"
       payment_method: "cod" | "baridimob" | "bank_transfer"
       post_status: "draft" | "published"
+      review_status: "pending" | "approved" | "rejected"
       shipping_method: "home" | "office"
     }
     CompositeTypes: {
@@ -877,6 +1058,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "customer"],
+      coupon_type: ["percentage", "fixed"],
       order_status: [
         "new",
         "confirmed",
@@ -888,6 +1070,7 @@ export const Constants = {
       ],
       payment_method: ["cod", "baridimob", "bank_transfer"],
       post_status: ["draft", "published"],
+      review_status: ["pending", "approved", "rejected"],
       shipping_method: ["home", "office"],
     },
   },

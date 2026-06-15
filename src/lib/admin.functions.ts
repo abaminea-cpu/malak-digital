@@ -1,0 +1,135 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
+
+async function requireAdmin(supabase: any, userId: string) {
+  const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+  if (!data) throw new Error("Forbidden: admin only");
+}
+
+export const adminListOrdersFn = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("orders")
+      .select("*, wilayas(name_fr), order_items(*)")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return data;
+  });
+
+const UpdateOrderStatus = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["new", "confirmed", "preparing", "shipped", "delivered", "cancelled", "returned"]),
+});
+
+export const adminUpdateOrderStatusFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => UpdateOrderStatus.parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("orders").update({ status: data.status }).eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+const UpsertProduct = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, "slug must be lowercase letters, digits, hyphens"),
+  description: z.string().max(5000).optional().or(z.literal("")),
+  short_description: z.string().max(500).optional().or(z.literal("")),
+  price: z.number().min(0),
+  compare_at_price: z.number().min(0).nullable().optional(),
+  stock: z.number().int().min(0),
+  category_id: z.string().uuid().nullable().optional(),
+  images: z.array(z.string().url()).max(10),
+  is_active: z.boolean(),
+  is_featured: z.boolean(),
+});
+
+export const adminUpsertProductFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => UpsertProduct.parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const payload = {
+      name: data.name,
+      slug: data.slug,
+      description: data.description || null,
+      short_description: data.short_description || null,
+      price: data.price,
+      compare_at_price: data.compare_at_price ?? null,
+      stock: data.stock,
+      category_id: data.category_id ?? null,
+      images: data.images,
+      is_active: data.is_active,
+      is_featured: data.is_featured,
+    };
+    if (data.id) {
+      const { error } = await supabaseAdmin.from("products").update(payload).eq("id", data.id);
+      if (error) throw error;
+      return { ok: true, id: data.id };
+    } else {
+      const { data: row, error } = await supabaseAdmin.from("products").insert(payload).select("id").single();
+      if (error) throw error;
+      return { ok: true, id: row.id };
+    }
+  });
+
+const DeleteProduct = z.object({ id: z.string().uuid() });
+export const adminDeleteProductFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => DeleteProduct.parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("products").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+const UpdateWilaya = z.object({
+  id: z.number().int().min(1).max(58),
+  home_price: z.number().min(0),
+  office_price: z.number().min(0),
+  home_enabled: z.boolean(),
+  office_enabled: z.boolean(),
+});
+
+export const adminUpdateWilayaFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => UpdateWilaya.parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("wilayas")
+      .update({
+        home_price: data.home_price,
+        office_price: data.office_price,
+        home_enabled: data.home_enabled,
+        office_enabled: data.office_enabled,
+      })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const adminStatsFn = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: orders } = await supabaseAdmin.from("orders").select("total, status, created_at");
+    const totalRevenue = (orders ?? []).filter(o => o.status !== "cancelled").reduce((s, o) => s + Number(o.total), 0);
+    const totalOrders = orders?.length ?? 0;
+    const newOrders = (orders ?? []).filter(o => o.status === "new").length;
+    const { count: productCount } = await supabaseAdmin.from("products").select("id", { count: "exact", head: true });
+    return { totalRevenue, totalOrders, newOrders, productCount: productCount ?? 0 };
+  });

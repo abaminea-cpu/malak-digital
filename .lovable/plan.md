@@ -60,24 +60,26 @@ Stack: TanStack Start + React 19 + Tailwind v4 + Lovable Cloud (Postgres + Auth 
 
 ---
 
-## 🚚 Phase 4 — Logistique & paiement (à venir)
+## ⚙️ Phase 4 — Logistique, paiement, stock (4A + 4C livré)
 
-### 4A — Intégrations livreurs Algérie
-- Yalidine, Zr Express, Maystro, EcoTrack
-- Création bordereau auto depuis l'admin
-- Sync statut + numéro de suivi
-- Calcul tarifs dynamique par wilaya/commune
+### 4A — Logistique
+- Table `shipments` (transporteur, suivi, statut, étiquette, coût)
+- Table `shipping_providers` (Yalidine / ZR / Maystro / EcoTrack / Manuel)
+- Admin : création/édition/suppression de bordereaux, passage auto en "expédié"
+- Export CSV des commandes (compatible Excel FR)
+- **À activer** : clés API marchand Yalidine / ZR / Maystro / EcoTrack
 
-### 4B — Paiement électronique
-- BaridiMob (Algérie Poste)
-- CIB / Edahabia (SATIM)
-- Garde COD comme défaut + UI de choix au checkout
+### 4B — Paiement (à venir)
+- Colonnes `payment_method` + `payment_status` déjà sur `orders`
+- BaridiMob (Algérie Poste) — nécessite compte marchand SATIM
+- CIB / Edahabia — nécessite compte marchand SATIM
+- COD reste actif par défaut
 
-### 4C — Gestion stock avancée
-- Multi-entrepôts
-- Alertes seuil critique (email + dashboard)
-- Historique mouvements stock
-- Import / export CSV produits + commandes
+### 4C — Stock
+- Table `stock_movements` (entrée / sortie / ajustement / retour)
+- Seuil d'alerte `low_stock_threshold` par produit
+- Dashboard "Stock bas" + historique des mouvements
+
 
 ---
 

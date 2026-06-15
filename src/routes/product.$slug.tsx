@@ -15,6 +15,7 @@ import { useI18n, formatPrice } from "@/lib/i18n";
 import { createOrderFn } from "@/lib/orders.functions";
 import { toast } from "sonner";
 import { Loader2, Minus, Plus, Check } from "lucide-react";
+import { ReviewsBlock, WishlistButton } from "@/components/site/ReviewsBlock";
 
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
@@ -190,7 +191,10 @@ function ProductPage() {
 
           {/* Info + COD form */}
           <div>
-            <h1 className="font-display text-3xl font-semibold md:text-4xl">{product.name}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="font-display text-3xl font-semibold md:text-4xl">{product.name}</h1>
+              <WishlistButton productId={product.id} />
+            </div>
             <div className="mt-4 flex items-baseline gap-3">
               <div className="text-3xl font-semibold text-gold">{formatPrice(Number(product.price), locale)}</div>
               {product.compare_at_price && Number(product.compare_at_price) > Number(product.price) && (
@@ -303,6 +307,8 @@ function ProductPage() {
                 <div className="mt-3 whitespace-pre-wrap text-muted-foreground">{product.description}</div>
               </div>
             )}
+
+            <ReviewsBlock productId={product.id} />
           </div>
         </div>
       </main>

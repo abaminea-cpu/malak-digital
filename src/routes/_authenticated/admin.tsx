@@ -796,10 +796,10 @@ function KanbanBoard({ orders }: { orders: any[] }) {
                 </div>
                 <div>
                   <Label>N° de suivi</Label>
-                  <Input defaultValue={selected.tracking_number ?? ""} onBlur={async (e) => { await useServerFn(adminUpdateOrderCRMFn); }} placeholder="Tracking" id={`tn-${selected.id}`} />
+                  <Input defaultValue={selected.tracking_number ?? ""} placeholder="Tracking" id={`tn-${selected.id}`} />
                   <Button size="sm" variant="outline" className="mt-2" onClick={async () => {
                     const v = (document.getElementById(`tn-${selected.id}`) as HTMLInputElement).value;
-                    await useServerFn(adminUpdateOrderCRMFn)({ data: { id: selected.id, tracking_number: v } } as any).catch(() => {});
+                    await update({ data: { id: selected.id, tracking_number: v } });
                     toast.success("Suivi enregistré");
                   }}>Enregistrer</Button>
                 </div>
@@ -808,12 +808,12 @@ function KanbanBoard({ orders }: { orders: any[] }) {
                   <Textarea id={`notes-${selected.id}`} rows={3} defaultValue={selected.internal_notes ?? ""} />
                   <Button size="sm" variant="outline" className="mt-2" onClick={async () => {
                     const v = (document.getElementById(`notes-${selected.id}`) as HTMLTextAreaElement).value;
-                    await useServerFn(adminUpdateOrderCRMFn)({ data: { id: selected.id, internal_notes: v } } as any).catch(() => {});
+                    await update({ data: { id: selected.id, internal_notes: v } });
                     toast.success("Notes enregistrées");
                   }}>Enregistrer</Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <a href={`tel:${selected.customer_phone}`}><Button size="sm" variant="outline" onClick={() => useServerFn(adminUpdateOrderCRMFn)({ data: { id: selected.id, increment_call: true } } as any).catch(() => {})}><Phone className="me-2 h-3 w-3" /> Appeler</Button></a>
+                  <a href={`tel:${selected.customer_phone}`}><Button size="sm" variant="outline" onClick={() => update({ data: { id: selected.id, increment_call: true } }).catch(() => {})}><Phone className="me-2 h-3 w-3" /> Appeler</Button></a>
                   <a target="_blank" rel="noreferrer" href={`https://wa.me/${selected.customer_phone.replace(/[^0-9]/g, "")}`}><Button size="sm" variant="outline"><MessageCircle className="me-2 h-3 w-3" /> WhatsApp</Button></a>
                 </div>
                 <div className="text-xs text-muted-foreground">Tentatives: {selected.call_attempts ?? 0} · Dernier contact: {selected.last_contact_at ? new Date(selected.last_contact_at).toLocaleString("fr-FR") : "—"}</div>

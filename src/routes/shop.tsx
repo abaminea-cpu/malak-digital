@@ -42,10 +42,15 @@ function ShopPage() {
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data } = await supabase.from("categories").select("id, name, slug").order("sort_order");
+      const { data } = await supabase
+        .from("categories")
+        .select("id, name, slug, is_active")
+        .eq("is_active", true)
+        .order("sort_order");
       return data ?? [];
     },
   });
+
 
   const filtered = useMemo(() => {
     let list = products as any[];

@@ -204,6 +204,33 @@ function ProductPage() {
               <Check className="h-3 w-3" /> {product.stock > 0 ? t("product.in_stock") : t("product.out_of_stock")}
             </div>
 
+            {variants.length > 0 && (
+              <div className="mt-6 space-y-2">
+                <Label>Variante</Label>
+                <div className="flex flex-wrap gap-2">
+                  {(variants as any[]).map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setVariantId(v.id)}
+                      disabled={v.stock <= 0}
+                      className={`rounded-md border px-3 py-2 text-sm transition-all ${
+                        variantId === v.id ? "border-gold bg-gold/10 text-gold" : "border-border text-foreground hover:border-gold/40"
+                      } ${v.stock <= 0 ? "opacity-40" : ""}`}
+                    >
+                      {v.name}
+                      {Number(v.price_delta) !== 0 && (
+                        <span className="ms-1 text-xs text-muted-foreground">
+                          ({Number(v.price_delta) > 0 ? "+" : ""}{formatPrice(Number(v.price_delta), locale)})
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
             {/* COD form */}
             <form onSubmit={onSubmit} className="mt-8 space-y-4 rounded-2xl border border-gold/20 bg-card p-6 shadow-card">
               <h2 className="font-display text-xl text-gradient-gold">{t("checkout.title")}</h2>

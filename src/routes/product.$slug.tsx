@@ -47,6 +47,20 @@ function ProductPage() {
     },
   });
 
+  const { data: variants = [] } = useQuery({
+    queryKey: ["product-variants", product?.id],
+    enabled: !!product?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_variants")
+        .select("*")
+        .eq("product_id", product!.id)
+        .eq("is_active", true)
+        .order("sort_order");
+      return data ?? [];
+    },
+  });
+
   const { data: wilayas = [] } = useQuery({
     queryKey: ["wilayas"],
     queryFn: async () => {
@@ -63,8 +77,23 @@ function ProductPage() {
   const [wilayaId, setWilayaId] = useState<string>("");
   const [shipping, setShipping] = useState<"home" | "office">("home");
   const [submitting, setSubmitting] = useState(false);
+  const [variantId, setVariantId] = useState<string | null>(null);
 
+  const variant = useMemo(() => (variants as any[]).find((v) => v.id === variantId) ?? null, [variants, variantId]);
   const wilaya = useMemo(() => (wilayas as any[]).find((w) => String(w.id) === wilayaId), [wilayas, wilayaId]);
+
+  // Auto-select first variant
+  useEffect(() => {
+    if (variants.length > 0 && !variantId) setVariantId((variants as any[])[0].id);
+  }, [variants, variantId]);
+
+  // Switch image when variant has one
+  useEffect(() => {
+    if (variant?.image_url && product?.images) {
+      const i = (product.images as string[]).indexOf(variant.image_url);
+      if (i >= 0) setImgIdx(i);
+    }
+  }, [variant, product]);
 
   // Auto-fallback if chosen shipping method is disabled
   useEffect(() => {
@@ -72,6 +101,7 @@ function ProductPage() {
     if (shipping === "home" && !wilaya.home_enabled && wilaya.office_enabled) setShipping("office");
     if (shipping === "office" && !wilaya.office_enabled && wilaya.home_enabled) setShipping("home");
   }, [wilaya, shipping]);
+
 
   if (isLoading) {
     return (
@@ -92,8 +122,9 @@ function ProductPage() {
     );
   }
 
+  const unitPrice = Number(product.price) + (variant ? Number(variant.price_delta) : 0);
   const shippingCost = !wilaya ? 0 : Number(shipping === "home" ? wilaya.home_price : wilaya.office_price);
-  const subtotal = Number(product.price) * qty;
+  const subtotal = unitPrice * qty;
   const total = subtotal + shippingCost;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -102,9 +133,11 @@ function ProductPage() {
     const form = new FormData(e.currentTarget);
 
     if (!wilayaId) { toast.error("Veuillez sélectionner une wilaya"); return; }
+    if (variants.length > 0 && !variantId) { toast.error("Veuillez choisir une variante"); return; }
 
     setSubmitting(true);
     try {
+      const variantLabel = variant ? ` — ${variant.name}` : "";
       const result = await createOrder({
         data: {
           items: [{ product_id: product.id, quantity: qty }],
@@ -117,7 +150,7 @@ function ProductPage() {
           commune: String(form.get("commune") || ""),
           address: String(form.get("address") || ""),
           shipping_method: shipping,
-          notes: String(form.get("notes") || ""),
+          notes: `${variantLabel}\n${String(form.get("notes") || "")}`.trim(),
         },
       });
       toast.success(t("checkout.success"), { description: `${t("checkout.success_desc")} (${result.order_number})` });
@@ -128,6 +161,7 @@ function ProductPage() {
       setSubmitting(false);
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -169,6 +203,33 @@ function ProductPage() {
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-success/10 px-3 py-1 text-xs text-success">
               <Check className="h-3 w-3" /> {product.stock > 0 ? t("product.in_stock") : t("product.out_of_stock")}
             </div>
+
+            {variants.length > 0 && (
+              <div className="mt-6 space-y-2">
+                <Label>Variante</Label>
+                <div className="flex flex-wrap gap-2">
+                  {(variants as any[]).map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setVariantId(v.id)}
+                      disabled={v.stock <= 0}
+                      className={`rounded-md border px-3 py-2 text-sm transition-all ${
+                        variantId === v.id ? "border-gold bg-gold/10 text-gold" : "border-border text-foreground hover:border-gold/40"
+                      } ${v.stock <= 0 ? "opacity-40" : ""}`}
+                    >
+                      {v.name}
+                      {Number(v.price_delta) !== 0 && (
+                        <span className="ms-1 text-xs text-muted-foreground">
+                          ({Number(v.price_delta) > 0 ? "+" : ""}{formatPrice(Number(v.price_delta), locale)})
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
 
             {/* COD form */}
             <form onSubmit={onSubmit} className="mt-8 space-y-4 rounded-2xl border border-gold/20 bg-card p-6 shadow-card">

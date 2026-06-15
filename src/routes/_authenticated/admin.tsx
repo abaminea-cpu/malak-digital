@@ -29,6 +29,7 @@ import { adminListCouponsFn, adminUpsertCouponFn, adminDeleteCouponFn } from "@/
 import { adminListAllReviewsFn, adminSetReviewStatusFn } from "@/lib/engagement.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
 import { LandingSectionsEditor } from "@/components/admin/LandingSectionsEditor";
+import { RealtimeOrdersListener } from "@/components/admin/RealtimeOrdersListener";
 import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search, Star, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -56,6 +57,7 @@ function AdminPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <RealtimeOrdersListener />
       <Header />
       <main className="container mx-auto flex-1 px-4 py-10 md:px-6">
         <div className="mb-8">

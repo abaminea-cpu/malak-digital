@@ -1152,3 +1152,152 @@ function MarketingTab() {
     </div>
   );
 }
+
+function PromoTab() {
+  const qc = useQueryClient();
+  const list = useServerFn(adminListCouponsFn);
+  const upsert = useServerFn(adminUpsertCouponFn);
+  const del = useServerFn(adminDeleteCouponFn);
+  const { data: coupons = [] } = useQuery({ queryKey: ["admin-coupons"], queryFn: () => list({}) });
+  const [editing, setEditing] = useState<any>(null);
+  const [open, setOpen] = useState(false);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const payload: any = {
+      id: editing?.id,
+      code: String(fd.get("code") || ""),
+      description: String(fd.get("description") || ""),
+      type: String(fd.get("type") || "percentage"),
+      value: Number(fd.get("value") || 0),
+      min_order_amount: Number(fd.get("min_order_amount") || 0),
+      max_uses: fd.get("max_uses") ? Number(fd.get("max_uses")) : null,
+      expires_at: fd.get("expires_at") ? new Date(String(fd.get("expires_at"))).toISOString() : null,
+      is_active: fd.get("is_active") === "on",
+    };
+    try {
+      await upsert({ data: payload });
+      toast.success("Code enregistre");
+      setOpen(false); setEditing(null);
+      qc.invalidateQueries({ queryKey: ["admin-coupons"] });
+    } catch (e: any) { toast.error(e.message ?? "Erreur"); }
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="font-display text-xl flex items-center gap-2"><Tag className="h-5 w-5 text-gold" /> Codes promo</h2>
+        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
+          <DialogTrigger asChild><Button onClick={() => setEditing(null)} className="bg-gradient-gold text-primary-foreground"><Plus className="me-2 h-4 w-4" /> Nouveau code</Button></DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>{editing ? "Modifier le code" : "Nouveau code promo"}</DialogTitle></DialogHeader>
+            <form onSubmit={onSubmit} className="space-y-3">
+              <div><Label>Code *</Label><Input name="code" required defaultValue={editing?.code} maxLength={40} placeholder="WELCOME10" /></div>
+              <div><Label>Description</Label><Input name="description" defaultValue={editing?.description ?? ""} maxLength={200} /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Type *</Label>
+                  <Select name="type" defaultValue={editing?.type ?? "percentage"}>
+                    <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Pourcentage (%)</SelectItem>
+                      <SelectItem value="fixed">Montant fixe (DA)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Valeur *</Label><Input name="value" type="number" min="0" step="0.01" required defaultValue={editing?.value ?? 10} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Montant min. (DA)</Label><Input name="min_order_amount" type="number" min="0" defaultValue={editing?.min_order_amount ?? 0} /></div>
+                <div><Label>Usages max.</Label><Input name="max_uses" type="number" min="1" defaultValue={editing?.max_uses ?? ""} placeholder="illimite" /></div>
+              </div>
+              <div><Label>Date d'expiration</Label><Input name="expires_at" type="date" defaultValue={editing?.expires_at ? String(editing.expires_at).slice(0,10) : ""} /></div>
+              <div className="flex items-center gap-2"><Switch name="is_active" defaultChecked={editing?.is_active ?? true} /><Label>Actif</Label></div>
+              <Button type="submit" className="w-full bg-gradient-gold text-primary-foreground">Enregistrer</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="space-y-2">
+        {coupons.length === 0 && <div className="rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">Aucun code promo</div>}
+        {(coupons as any[]).map((c) => (
+          <div key={c.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-card p-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-semibold text-gold">{c.code}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${c.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
+                  {c.is_active ? "Actif" : "Inactif"}
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {c.type === "percentage" ? `-${c.value}%` : `-${c.value} DA`}
+                {c.min_order_amount > 0 && ` - min ${c.min_order_amount} DA`}
+                {c.max_uses && ` - ${c.used_count}/${c.max_uses} utilises`}
+                {c.expires_at && ` - expire ${new Date(c.expires_at).toLocaleDateString("fr-FR")}`}
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" onClick={() => { setEditing(c); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+              <Button size="sm" variant="ghost" onClick={async () => {
+                if (!confirm("Supprimer ce code ?")) return;
+                await del({ data: { id: c.id } });
+                qc.invalidateQueries({ queryKey: ["admin-coupons"] });
+              }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReviewsTab() {
+  const qc = useQueryClient();
+  const list = useServerFn(adminListAllReviewsFn);
+  const setStatus = useServerFn(adminSetReviewStatusFn);
+  const { data: reviews = [] } = useQuery({ queryKey: ["admin-reviews"], queryFn: () => list({}) });
+
+  async function changeStatus(id: string, status: "approved" | "rejected" | "pending") {
+    await setStatus({ data: { id, status } });
+    toast.success("Statut mis a jour");
+    qc.invalidateQueries({ queryKey: ["admin-reviews"] });
+  }
+
+  return (
+    <div>
+      <h2 className="mb-4 font-display text-xl flex items-center gap-2"><Star className="h-5 w-5 text-gold" /> Moderation des avis</h2>
+      <div className="space-y-2">
+        {reviews.length === 0 && <div className="rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">Aucun avis</div>}
+        {(reviews as any[]).map((r) => (
+          <div key={r.id} className="rounded-xl border border-border/60 bg-card p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{r.author_name}</span>
+                  <span className="inline-flex">
+                    {[1,2,3,4,5].map((n) => <Star key={n} className={`h-3.5 w-3.5 ${n <= r.rating ? "fill-gold text-gold" : "text-muted-foreground"}`} />)}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground">Produit : {r.products?.name} - {new Date(r.created_at).toLocaleDateString("fr-FR")}</div>
+              </div>
+              <span className={`rounded-full px-2 py-0.5 text-xs ${
+                r.status === "approved" ? "bg-success/10 text-success" :
+                r.status === "rejected" ? "bg-destructive/10 text-destructive" :
+                "bg-muted text-muted-foreground"
+              }`}>{r.status}</span>
+            </div>
+            {r.title && <div className="mt-2 text-sm font-medium">{r.title}</div>}
+            {r.comment && <div className="mt-1 text-sm text-muted-foreground">{r.comment}</div>}
+            <div className="mt-3 flex gap-2">
+              {r.status !== "approved" && <Button size="sm" variant="outline" onClick={() => changeStatus(r.id, "approved")}>Approuver</Button>}
+              {r.status !== "rejected" && <Button size="sm" variant="outline" onClick={() => changeStatus(r.id, "rejected")}>Rejeter</Button>}
+              {r.status !== "pending" && <Button size="sm" variant="ghost" onClick={() => changeStatus(r.id, "pending")}>En attente</Button>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

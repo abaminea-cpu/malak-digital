@@ -27,6 +27,7 @@ import { adminUpsertLandingFn, adminDeleteLandingFn } from "@/lib/landing.functi
 import { adminUpdateOrderCRMFn, adminListAbandonedFn, adminUpdateAbandonedFn, adminCustomer360Fn, adminUpsertPixelsFn } from "@/lib/crm.functions";
 import { adminListCouponsFn, adminUpsertCouponFn, adminDeleteCouponFn } from "@/lib/coupons.functions";
 import { adminListAllReviewsFn, adminSetReviewStatusFn } from "@/lib/engagement.functions";
+import { adminListShipmentsFn, adminUpsertShipmentFn, adminDeleteShipmentFn, adminListStockMovementsFn, adminAddStockMovementFn, adminLowStockFn, adminExportOrdersCsvFn } from "@/lib/logistics.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
 import { LandingSectionsEditor } from "@/components/admin/LandingSectionsEditor";
 import { RealtimeOrdersListener } from "@/components/admin/RealtimeOrdersListener";
@@ -78,6 +79,8 @@ function AdminPage() {
             <TabsTrigger value="marketing">Marketing</TabsTrigger>
             <TabsTrigger value="promo">Promo</TabsTrigger>
             <TabsTrigger value="reviews">Avis</TabsTrigger>
+            <TabsTrigger value="logistics">Logistique</TabsTrigger>
+            <TabsTrigger value="stock">Stock</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-6"><DashboardTab /></TabsContent>
@@ -91,6 +94,8 @@ function AdminPage() {
           <TabsContent value="marketing" className="mt-6"><MarketingTab /></TabsContent>
           <TabsContent value="promo" className="mt-6"><PromoTab /></TabsContent>
           <TabsContent value="reviews" className="mt-6"><ReviewsTab /></TabsContent>
+          <TabsContent value="logistics" className="mt-6"><LogisticsTab /></TabsContent>
+          <TabsContent value="stock" className="mt-6"><StockTab /></TabsContent>
         </Tabs>
       </main>
       <Footer />
@@ -1267,6 +1272,259 @@ function ReviewsTab() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function LogisticsTab() {
+  const qc = useQueryClient();
+  const listShip = useServerFn(adminListShipmentsFn);
+  const upsertShip = useServerFn(adminUpsertShipmentFn);
+  const delShip = useServerFn(adminDeleteShipmentFn);
+  const listOrders = useServerFn(adminListOrdersFn);
+  const exportCsv = useServerFn(adminExportOrdersCsvFn);
+
+  const { data: shipments = [] } = useQuery({ queryKey: ["admin-shipments"], queryFn: () => listShip({}) });
+  const { data: orders = [] } = useQuery({ queryKey: ["admin-orders"], queryFn: () => listOrders({}) });
+
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [orderId, setOrderId] = useState("");
+  const [provider, setProvider] = useState("manual");
+  const [status, setStatus] = useState("created");
+
+  function openNew() { setEditing(null); setOrderId(""); setProvider("manual"); setStatus("created"); setOpen(true); }
+  function openEdit(s: any) { setEditing(s); setOrderId(s.order_id); setProvider(s.provider_code); setStatus(s.status); setOpen(true); }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    if (!orderId) { toast.error("Choisissez une commande"); return; }
+    try {
+      await upsertShip({ data: {
+        id: editing?.id,
+        order_id: orderId,
+        provider_code: provider,
+        status,
+        tracking_number: String(f.get("tracking") || ""),
+        shipping_cost: f.get("cost") ? Number(f.get("cost")) : null,
+        label_url: String(f.get("label") || ""),
+      } });
+      toast.success("Bordereau enregistré");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["admin-shipments"] });
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+    } catch (err: any) { toast.error(err.message); }
+  }
+
+  async function downloadCsv() {
+    const res = await exportCsv({});
+    const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `commandes-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${res.count} commandes exportées`);
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-xl flex items-center gap-2"><Truck className="h-5 w-5 text-gold" /> Bordereaux de livraison</h2>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={downloadCsv}>📥 Export commandes CSV</Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button onClick={openNew} className="bg-gradient-gold text-primary-foreground"><Plus className="me-2 h-4 w-4" /> Nouveau bordereau</Button></DialogTrigger>
+            <DialogContent className="max-w-xl">
+              <DialogHeader><DialogTitle>{editing ? "Modifier" : "Nouveau"} bordereau</DialogTitle></DialogHeader>
+              <form onSubmit={onSubmit} className="space-y-3">
+                <div>
+                  <Label>Commande *</Label>
+                  <Select value={orderId} onValueChange={setOrderId}>
+                    <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                    <SelectContent>
+                      {(orders as any[]).slice(0, 100).map((o) => (
+                        <SelectItem key={o.id} value={o.id}>#{o.order_number} — {o.customer_first_name} {o.customer_last_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <Label>Transporteur *</Label>
+                    <Select value={provider} onValueChange={setProvider}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yalidine">Yalidine</SelectItem>
+                        <SelectItem value="zr_express">ZR Express</SelectItem>
+                        <SelectItem value="maystro">Maystro</SelectItem>
+                        <SelectItem value="ecotrack">EcoTrack</SelectItem>
+                        <SelectItem value="manual">Manuel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Statut *</Label>
+                    <Select value={status} onValueChange={setStatus}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="created">Créé</SelectItem>
+                        <SelectItem value="picked_up">Récupéré</SelectItem>
+                        <SelectItem value="in_transit">En transit</SelectItem>
+                        <SelectItem value="delivered">Livré</SelectItem>
+                        <SelectItem value="returned">Retourné</SelectItem>
+                        <SelectItem value="cancelled">Annulé</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div><Label>Numéro de suivi</Label><Input name="tracking" defaultValue={editing?.tracking_number ?? ""} /></div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div><Label>Frais transporteur (DA)</Label><Input name="cost" type="number" step="0.01" defaultValue={editing?.shipping_cost ?? ""} /></div>
+                  <div><Label>URL étiquette PDF</Label><Input name="label" type="url" defaultValue={editing?.label_url ?? ""} /></div>
+                </div>
+                <Button type="submit" className="w-full bg-gradient-gold text-primary-foreground">Enregistrer</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-border/60">
+        <table className="w-full text-sm">
+          <thead className="bg-surface text-xs uppercase text-muted-foreground">
+            <tr><th className="p-3 text-start">Commande</th><th className="p-3">Transporteur</th><th className="p-3">Suivi</th><th className="p-3">Statut</th><th className="p-3">Créé</th><th className="p-3"></th></tr>
+          </thead>
+          <tbody>
+            {(shipments as any[]).map((s) => (
+              <tr key={s.id} className="border-t border-border/60">
+                <td className="p-3">
+                  <div className="font-medium">#{s.orders?.order_number}</div>
+                  <div className="text-xs text-muted-foreground">{s.orders?.customer_first_name} {s.orders?.customer_last_name} · {s.orders?.wilayas?.name_fr}</div>
+                </td>
+                <td className="p-3 text-center text-xs uppercase text-gold">{s.provider_code}</td>
+                <td className="p-3 text-center font-mono text-xs">{s.tracking_number || "—"}</td>
+                <td className="p-3 text-center"><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{s.status}</span></td>
+                <td className="p-3 text-center text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString("fr-FR")}</td>
+                <td className="p-3 text-end">
+                  <Button size="icon" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={async () => { if (confirm("Supprimer ?")) { await delShip({ data: { id: s.id } }); toast.success("Supprimé"); qc.invalidateQueries({ queryKey: ["admin-shipments"] }); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </td>
+              </tr>
+            ))}
+            {shipments.length === 0 && <tr><td colSpan={6} className="p-10 text-center text-muted-foreground">Aucun bordereau.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="rounded-xl border border-gold/30 bg-gold/5 p-4 text-sm">
+        <div className="font-medium text-gold">🔌 Connexion API transporteurs</div>
+        <p className="mt-1 text-muted-foreground">
+          Les intégrations Yalidine, ZR Express, Maystro et EcoTrack peuvent être activées en ajoutant les clés API marchand correspondantes. Dites-moi quand vous voulez configurer un transporteur.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function StockTab() {
+  const qc = useQueryClient();
+  const lowStock = useServerFn(adminLowStockFn);
+  const movements = useServerFn(adminListStockMovementsFn);
+  const addMove = useServerFn(adminAddStockMovementFn);
+  const products = useQuery({ queryKey: ["admin-products"], queryFn: async () => (await supabase.from("products").select("id, name, stock, low_stock_threshold").order("name")).data ?? [] });
+  const { data: low = [] } = useQuery({ queryKey: ["admin-low-stock"], queryFn: () => lowStock({}) });
+  const { data: moves = [] } = useQuery({ queryKey: ["admin-stock-moves"], queryFn: () => movements({}) });
+
+  const [pid, setPid] = useState("");
+  const [type, setType] = useState<"in" | "out" | "adjust" | "return">("in");
+  const [qty, setQty] = useState(1);
+  const [reason, setReason] = useState("");
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pid) { toast.error("Choisissez un produit"); return; }
+    try {
+      const res = await addMove({ data: { product_id: pid, type, quantity: qty, reason } });
+      toast.success(`Stock mis à jour : ${res.new_stock}`);
+      setQty(1); setReason("");
+      qc.invalidateQueries({ queryKey: ["admin-stock-moves"] });
+      qc.invalidateQueries({ queryKey: ["admin-low-stock"] });
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+    } catch (err: any) { toast.error(err.message); }
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="font-display text-xl flex items-center gap-2"><Package className="h-5 w-5 text-gold" /> Gestion du stock</h2>
+
+      {low.length > 0 && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
+          <div className="mb-2 font-medium text-destructive">⚠️ Stock bas ({low.length} produit{low.length > 1 ? "s" : ""})</div>
+          <ul className="space-y-1 text-sm">
+            {(low as any[]).map((p) => (
+              <li key={p.id} className="flex items-center justify-between">
+                <span>{p.name}</span>
+                <span className="font-mono text-destructive">{p.stock} / seuil {p.low_stock_threshold}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <form onSubmit={submit} className="grid gap-3 rounded-xl border border-border/60 bg-card p-4 md:grid-cols-[2fr_1fr_1fr_2fr_auto]">
+        <div>
+          <Label className="text-xs">Produit</Label>
+          <Select value={pid} onValueChange={setPid}>
+            <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+            <SelectContent>{(products.data ?? []).map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} (stock: {p.stock})</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Type</Label>
+          <Select value={type} onValueChange={(v) => setType(v as any)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="in">Entrée (+)</SelectItem>
+              <SelectItem value="out">Sortie (-)</SelectItem>
+              <SelectItem value="return">Retour (+)</SelectItem>
+              <SelectItem value="adjust">Ajustement (=)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Quantité</Label>
+          <Input type="number" min={0} value={qty} onChange={(e) => setQty(Number(e.target.value) || 0)} />
+        </div>
+        <div>
+          <Label className="text-xs">Raison</Label>
+          <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Réception fournisseur, inventaire…" />
+        </div>
+        <div className="flex items-end"><Button type="submit" className="bg-gradient-gold text-primary-foreground">Enregistrer</Button></div>
+      </form>
+
+      <div>
+        <h3 className="mb-2 text-sm font-medium text-muted-foreground">Historique des mouvements</h3>
+        <div className="overflow-x-auto rounded-xl border border-border/60">
+          <table className="w-full text-sm">
+            <thead className="bg-surface text-xs uppercase text-muted-foreground">
+              <tr><th className="p-3 text-start">Date</th><th className="p-3 text-start">Produit</th><th className="p-3">Type</th><th className="p-3">Quantité</th><th className="p-3 text-start">Raison</th></tr>
+            </thead>
+            <tbody>
+              {(moves as any[]).map((m) => (
+                <tr key={m.id} className="border-t border-border/60">
+                  <td className="p-3 text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("fr-FR")}</td>
+                  <td className="p-3">{m.products?.name}</td>
+                  <td className="p-3 text-center text-xs uppercase">{m.type}</td>
+                  <td className={`p-3 text-center font-mono ${m.quantity >= 0 ? "text-success" : "text-destructive"}`}>{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{m.reason || "—"}</td>
+                </tr>
+              ))}
+              {moves.length === 0 && <tr><td colSpan={5} className="p-10 text-center text-muted-foreground">Aucun mouvement.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

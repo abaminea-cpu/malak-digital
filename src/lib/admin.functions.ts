@@ -48,8 +48,13 @@ const UpsertProduct = z.object({
   stock: z.number().int().min(0),
   category_id: z.string().uuid().nullable().optional(),
   images: z.array(z.string().url()).max(10),
+  video_url: z.string().url().nullable().optional().or(z.literal("")),
+  options: z.record(z.string(), z.array(z.string())).optional(),
   is_active: z.boolean(),
   is_featured: z.boolean(),
+  landing_mode: z.boolean().optional(),
+  meta_title: z.string().max(200).optional().or(z.literal("")),
+  meta_description: z.string().max(300).optional().or(z.literal("")),
 });
 
 export const adminUpsertProductFn = createServerFn({ method: "POST" })
@@ -68,8 +73,13 @@ export const adminUpsertProductFn = createServerFn({ method: "POST" })
       stock: data.stock,
       category_id: data.category_id ?? null,
       images: data.images,
+      video_url: data.video_url || null,
+      options: data.options ?? {},
       is_active: data.is_active,
       is_featured: data.is_featured,
+      landing_mode: data.landing_mode ?? false,
+      meta_title: data.meta_title || null,
+      meta_description: data.meta_description || null,
     };
     if (data.id) {
       const { error } = await supabaseAdmin.from("products").update(payload).eq("id", data.id);
@@ -81,6 +91,7 @@ export const adminUpsertProductFn = createServerFn({ method: "POST" })
       return { ok: true, id: row.id };
     }
   });
+
 
 const DeleteProduct = z.object({ id: z.string().uuid() });
 export const adminDeleteProductFn = createServerFn({ method: "POST" })

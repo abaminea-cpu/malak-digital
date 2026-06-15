@@ -45,10 +45,12 @@ Stack: TanStack Start + React 19 + Tailwind v4 + Lovable Cloud (Postgres + Auth 
 - **Wishlist** : table `wishlists` par utilisateur, bouton cœur sur fiches produit
 - **Upsell / Cross-sell** : table `product_upsells`, suggestions au checkout
 
-### 3B — Éditeur visuel de pages (à venir)
-- Builder drag & drop (blocs hero, grille, témoignages, urgence, FAQ, vidéo)
-- Bibliothèque de templates par secteur
-- Sauvegarde versionnée + preview
+### 3B — Éditeur visuel de landing pages (terminé)
+- Éditeur par blocs typés (bénéfices / témoignages / FAQ / galerie / vidéo / garantie)
+- Réordonnancement ↑↓, duplication, suppression par bloc
+- Bibliothèque de templates (produit complet, urgence flash, vidéo + témoignages)
+- Aperçu live `/lp/$slug` depuis l'éditeur
+
 
 ### 3C — Notifications multi-canal (à venir)
 - Email transactionnel (Resend) : confirmation, expédition, livraison

@@ -529,7 +529,7 @@ function BlogPostsAdmin() {
         excerpt: String(f.get("excerpt") || ""),
         content: String(f.get("content") || ""),
         cover_image: cover,
-        category_id: catId || null,
+        category_id: catId && catId !== "__none" ? catId : null,
         tags,
         status,
         meta_title: String(f.get("meta_title") || ""),

@@ -986,17 +986,8 @@ function LandingTab() {
     } catch (err: any) { toast.error(err.message); }
   }
 
-  function addSection(type: string) {
-    const defaults: any = {
-      benefits: { type, title: "Pourquoi nous", items: [{ title: "Bénéfice 1", description: "Description" }] },
-      testimonials: { type, title: "Avis clients", items: [{ name: "Amine", city: "Alger", rating: 5, text: "Super produit !" }] },
-      faq: { type, title: "Questions fréquentes", items: [{ q: "Question ?", a: "Réponse." }] },
-      gallery: { type, title: "Galerie", items: [] },
-      video: { type, title: "Vidéo", content: "https://www.youtube.com/embed/VIDEO_ID" },
-      guarantee: { type, title: "Garantie", content: "Satisfait ou remboursé 7 jours." },
-    };
-    setSections([...sections, defaults[type]]);
-  }
+  const slugPreview = editing?.slug;
+
 
   return (
     <div>

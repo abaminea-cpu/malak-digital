@@ -47,6 +47,20 @@ function ProductPage() {
     },
   });
 
+  const { data: variants = [] } = useQuery({
+    queryKey: ["product-variants", product?.id],
+    enabled: !!product?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_variants")
+        .select("*")
+        .eq("product_id", product!.id)
+        .eq("is_active", true)
+        .order("sort_order");
+      return data ?? [];
+    },
+  });
+
   const { data: wilayas = [] } = useQuery({
     queryKey: ["wilayas"],
     queryFn: async () => {
@@ -63,8 +77,23 @@ function ProductPage() {
   const [wilayaId, setWilayaId] = useState<string>("");
   const [shipping, setShipping] = useState<"home" | "office">("home");
   const [submitting, setSubmitting] = useState(false);
+  const [variantId, setVariantId] = useState<string | null>(null);
 
+  const variant = useMemo(() => (variants as any[]).find((v) => v.id === variantId) ?? null, [variants, variantId]);
   const wilaya = useMemo(() => (wilayas as any[]).find((w) => String(w.id) === wilayaId), [wilayas, wilayaId]);
+
+  // Auto-select first variant
+  useEffect(() => {
+    if (variants.length > 0 && !variantId) setVariantId((variants as any[])[0].id);
+  }, [variants, variantId]);
+
+  // Switch image when variant has one
+  useEffect(() => {
+    if (variant?.image_url && product?.images) {
+      const i = (product.images as string[]).indexOf(variant.image_url);
+      if (i >= 0) setImgIdx(i);
+    }
+  }, [variant, product]);
 
   // Auto-fallback if chosen shipping method is disabled
   useEffect(() => {
@@ -72,6 +101,7 @@ function ProductPage() {
     if (shipping === "home" && !wilaya.home_enabled && wilaya.office_enabled) setShipping("office");
     if (shipping === "office" && !wilaya.office_enabled && wilaya.home_enabled) setShipping("home");
   }, [wilaya, shipping]);
+
 
   if (isLoading) {
     return (

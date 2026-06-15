@@ -23,8 +23,10 @@ import {
 } from "@/lib/admin.functions";
 import { adminUpsertCategoryFn, adminDeleteCategoryFn, adminReplaceVariantsFn } from "@/lib/catalog.functions";
 import { adminUpsertPostFn, adminDeletePostFn, adminUpsertBlogCategoryFn, adminDeleteBlogCategoryFn } from "@/lib/blog.functions";
+import { adminUpsertLandingFn, adminDeleteLandingFn } from "@/lib/landing.functions";
+import { adminUpdateOrderCRMFn, adminListAbandonedFn, adminUpdateAbandonedFn, adminCustomer360Fn, adminUpsertPixelsFn } from "@/lib/crm.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
-import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Malak Digital" }, { name: "robots", content: "noindex" }] }),
@@ -64,16 +66,22 @@ function AdminPage() {
             <TabsTrigger value="products">Produits</TabsTrigger>
             <TabsTrigger value="categories">Catégories</TabsTrigger>
             <TabsTrigger value="orders">Commandes</TabsTrigger>
+            <TabsTrigger value="crm">CRM</TabsTrigger>
+            <TabsTrigger value="landing">Landing</TabsTrigger>
             <TabsTrigger value="shipping">Livraison</TabsTrigger>
             <TabsTrigger value="blog">Blog</TabsTrigger>
+            <TabsTrigger value="marketing">Marketing</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-6"><DashboardTab /></TabsContent>
           <TabsContent value="products" className="mt-6"><ProductsTab /></TabsContent>
           <TabsContent value="categories" className="mt-6"><CategoriesTab /></TabsContent>
           <TabsContent value="orders" className="mt-6"><OrdersTab /></TabsContent>
+          <TabsContent value="crm" className="mt-6"><CRMTab /></TabsContent>
+          <TabsContent value="landing" className="mt-6"><LandingTab /></TabsContent>
           <TabsContent value="shipping" className="mt-6"><ShippingTab /></TabsContent>
           <TabsContent value="blog" className="mt-6"><BlogTab /></TabsContent>
+          <TabsContent value="marketing" className="mt-6"><MarketingTab /></TabsContent>
         </Tabs>
       </main>
       <Footer />

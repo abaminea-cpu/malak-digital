@@ -27,6 +27,7 @@ import { adminUpsertLandingFn, adminDeleteLandingFn } from "@/lib/landing.functi
 import { adminUpdateOrderCRMFn, adminListAbandonedFn, adminUpdateAbandonedFn, adminCustomer360Fn, adminUpsertPixelsFn } from "@/lib/crm.functions";
 import { adminListCouponsFn, adminUpsertCouponFn, adminDeleteCouponFn } from "@/lib/coupons.functions";
 import { adminListAllReviewsFn, adminSetReviewStatusFn } from "@/lib/engagement.functions";
+import { adminListShipmentsFn, adminUpsertShipmentFn, adminDeleteShipmentFn, adminListStockMovementsFn, adminAddStockMovementFn, adminLowStockFn, adminExportOrdersCsvFn } from "@/lib/logistics.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
 import { LandingSectionsEditor } from "@/components/admin/LandingSectionsEditor";
 import { RealtimeOrdersListener } from "@/components/admin/RealtimeOrdersListener";
@@ -78,6 +79,8 @@ function AdminPage() {
             <TabsTrigger value="marketing">Marketing</TabsTrigger>
             <TabsTrigger value="promo">Promo</TabsTrigger>
             <TabsTrigger value="reviews">Avis</TabsTrigger>
+            <TabsTrigger value="logistics">Logistique</TabsTrigger>
+            <TabsTrigger value="stock">Stock</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-6"><DashboardTab /></TabsContent>
@@ -91,6 +94,8 @@ function AdminPage() {
           <TabsContent value="marketing" className="mt-6"><MarketingTab /></TabsContent>
           <TabsContent value="promo" className="mt-6"><PromoTab /></TabsContent>
           <TabsContent value="reviews" className="mt-6"><ReviewsTab /></TabsContent>
+          <TabsContent value="logistics" className="mt-6"><LogisticsTab /></TabsContent>
+          <TabsContent value="stock" className="mt-6"><StockTab /></TabsContent>
         </Tabs>
       </main>
       <Footer />

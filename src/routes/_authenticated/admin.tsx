@@ -222,7 +222,7 @@ function ProductsTab() {
                 <Select value={categoryId} onValueChange={setCategoryId}>
                   <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">— Aucune —</SelectItem>
+                    <SelectItem value="__none">— Aucune —</SelectItem>
                     {(categories as any[]).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -569,7 +569,7 @@ function BlogPostsAdmin() {
                   <Select value={catId} onValueChange={setCatId}>
                     <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">— Aucune —</SelectItem>
+                      <SelectItem value="__none">— Aucune —</SelectItem>
                       {(cats as any[]).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>

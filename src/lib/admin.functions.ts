@@ -106,7 +106,7 @@ export const adminDeleteProductFn = createServerFn({ method: "POST" })
   });
 
 const UpdateWilaya = z.object({
-  id: z.number().int().min(1).max(58),
+  id: z.number().int().min(1).max(69),
   home_price: z.number().min(0),
   office_price: z.number().min(0),
   home_enabled: z.boolean(),

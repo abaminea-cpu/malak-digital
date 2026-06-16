@@ -13,7 +13,7 @@ export const Route = createFileRoute("/shop")({
   head: () => ({
     meta: [
       { title: "Boutique — Malak Digital" },
-      { name: "description", content: "Tous nos produits premium. Livraison dans les 58 wilayas d'Algérie." },
+      { name: "description", content: "Tous nos produits premium. Livraison dans les 69 wilayas d'Algérie." },
       { property: "og:title", content: "Boutique — Malak Digital" },
       { property: "og:url", content: "/shop" },
     ],

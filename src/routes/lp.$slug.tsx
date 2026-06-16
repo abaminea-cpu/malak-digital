@@ -144,7 +144,7 @@ function LandingPage() {
             </a>
             <div className="mt-6 flex flex-wrap gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><ShieldCheck className="h-4 w-4 text-gold" /> Paiement à la livraison</span>
-              <span className="flex items-center gap-1"><Truck className="h-4 w-4 text-gold" /> Livraison 58 wilayas</span>
+              <span className="flex items-center gap-1"><Truck className="h-4 w-4 text-gold" /> Livraison 69 wilayas</span>
               <span className="flex items-center gap-1"><Phone className="h-4 w-4 text-gold" /> Support 7j/7</span>
             </div>
           </div>

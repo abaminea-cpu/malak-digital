@@ -252,6 +252,44 @@ export type Database = {
           },
         ]
       }
+      communes: {
+        Row: {
+          created_at: string
+          id: string
+          name_ar: string | null
+          name_fr: string
+          postal_code: string | null
+          updated_at: string
+          wilaya_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_ar?: string | null
+          name_fr: string
+          postal_code?: string | null
+          updated_at?: string
+          wilaya_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_ar?: string | null
+          name_fr?: string
+          postal_code?: string | null
+          updated_at?: string
+          wilaya_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communes_wilaya_id_fkey"
+            columns: ["wilaya_id"]
+            isOneToOne: false
+            referencedRelation: "wilayas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           code: string
@@ -1002,6 +1040,7 @@ export type Database = {
       }
       wilayas: {
         Row: {
+          commune_count: number | null
           home_enabled: boolean
           home_price: number
           id: number
@@ -1009,9 +1048,11 @@ export type Database = {
           name_fr: string
           office_enabled: boolean
           office_price: number
+          region: string | null
           updated_at: string
         }
         Insert: {
+          commune_count?: number | null
           home_enabled?: boolean
           home_price?: number
           id: number
@@ -1019,9 +1060,11 @@ export type Database = {
           name_fr: string
           office_enabled?: boolean
           office_price?: number
+          region?: string | null
           updated_at?: string
         }
         Update: {
+          commune_count?: number | null
           home_enabled?: boolean
           home_price?: number
           id?: number
@@ -1029,6 +1072,7 @@ export type Database = {
           name_fr?: string
           office_enabled?: boolean
           office_price?: number
+          region?: string | null
           updated_at?: string
         }
         Relationships: []

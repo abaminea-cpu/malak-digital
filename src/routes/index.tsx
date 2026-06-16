@@ -12,9 +12,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Malak Digital — Boutique en ligne premium en Algérie" },
-      { name: "description", content: "Achetez en ligne en toute confiance. Paiement à la livraison dans les 58 wilayas d'Algérie. Produits soigneusement sélectionnés." },
+      { name: "description", content: "Achetez en ligne en toute confiance. Paiement à la livraison dans les 69 wilayas d'Algérie. Produits soigneusement sélectionnés." },
       { property: "og:title", content: "Malak Digital — Boutique premium en Algérie" },
-      { property: "og:description", content: "Paiement à la livraison dans les 58 wilayas. Une expérience d'achat haut de gamme." },
+      { property: "og:description", content: "Paiement à la livraison dans les 69 wilayas. Une expérience d'achat haut de gamme." },
       { property: "og:url", content: "/" },
     ],
     links: [

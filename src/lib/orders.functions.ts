@@ -14,7 +14,7 @@ const CreateOrderInput = z.object({
   customer_phone: z.string().trim().min(7).max(20),
   customer_phone_alt: z.string().trim().max(20).optional().or(z.literal("")),
   customer_email: z.string().trim().email().max(160).optional().or(z.literal("")),
-  wilaya_id: z.number().int().min(1).max(58),
+  wilaya_id: z.number().int().min(1).max(69),
   commune: z.string().trim().min(1).max(120),
   address: z.string().trim().max(300).optional().or(z.literal("")),
   shipping_method: z.enum(["home", "office"]),

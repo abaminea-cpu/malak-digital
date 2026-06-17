@@ -15,7 +15,7 @@ export const adminListShipmentsFn = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("shipments")
-      .select("*, orders(order_number, customer_first_name, customer_last_name, total, wilayas(name_fr))")
+      .select("*, orders(order_number, customer_first_name, customer_last_name, customer_phone, customer_phone_alt, address, commune, total, subtotal, shipping_cost, shipping_method, notes, wilayas(name_fr), order_items(product_name, quantity, unit_price, line_total))")
       .order("created_at", { ascending: false })
       .limit(200);
     return data ?? [];

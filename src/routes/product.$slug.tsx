@@ -73,6 +73,20 @@ function ProductPage() {
     },
   });
 
+  const [wilayaId, setWilayaIdState] = useState<string>("");
+  const { data: communes = [] } = useQuery({
+    queryKey: ["communes", wilayaId],
+    enabled: !!wilayaId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("communes")
+        .select("id, name_fr, name_ar")
+        .eq("wilaya_id", Number(wilayaId))
+        .order("name_fr");
+      return data ?? [];
+    },
+  });
+
   const [imgIdx, setImgIdx] = useState(0);
   const [qty, setQty] = useState(1);
   const [wilayaId, setWilayaId] = useState<string>("");

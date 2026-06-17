@@ -73,9 +73,22 @@ function ProductPage() {
     },
   });
 
+  const [wilayaId, setWilayaId] = useState<string>("");
+  const { data: communes = [] } = useQuery({
+    queryKey: ["communes", wilayaId],
+    enabled: !!wilayaId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("communes")
+        .select("id, name_fr, name_ar")
+        .eq("wilaya_id", Number(wilayaId))
+        .order("name_fr");
+      return data ?? [];
+    },
+  });
+
   const [imgIdx, setImgIdx] = useState(0);
   const [qty, setQty] = useState(1);
-  const [wilayaId, setWilayaId] = useState<string>("");
   const [shipping, setShipping] = useState<"home" | "office">("home");
   const [submitting, setSubmitting] = useState(false);
   const [variantId, setVariantId] = useState<string | null>(null);
@@ -259,7 +272,21 @@ function ProductPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Field label={t("checkout.commune")} name="commune" required />
+                <div>
+                  <Label>{t("checkout.commune")} *</Label>
+                  {wilayaId && communes.length > 0 ? (
+                    <Select name="commune" key={wilayaId}>
+                      <SelectTrigger className="mt-1.5"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {(communes as any[]).map((c) => (
+                          <SelectItem key={c.id} value={c.name_fr}>{c.name_fr}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input name="commune" required className="mt-1.5" placeholder={wilayaId ? "—" : "Choisir wilaya d'abord"} />
+                  )}
+                </div>
               </div>
               <Field label={t("checkout.address")} name="address" />
 

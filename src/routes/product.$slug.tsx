@@ -89,7 +89,6 @@ function ProductPage() {
 
   const [imgIdx, setImgIdx] = useState(0);
   const [qty, setQty] = useState(1);
-  const [wilayaId, setWilayaId] = useState<string>("");
   const [shipping, setShipping] = useState<"home" | "office">("home");
   const [submitting, setSubmitting] = useState(false);
   const [variantId, setVariantId] = useState<string | null>(null);

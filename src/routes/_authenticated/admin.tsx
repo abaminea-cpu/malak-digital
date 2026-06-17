@@ -1328,6 +1328,64 @@ function LogisticsTab() {
     toast.success(`${res.count} commandes exportées`);
   }
 
+  function printLabel(s: any) {
+    const o = s.orders ?? {};
+    const items = (o.order_items ?? []) as any[];
+    const fmt = (n: any) => new Intl.NumberFormat("fr-FR").format(Number(n || 0)) + " DA";
+    const itemsHtml = items.map(i => `<tr><td>${i.product_name}</td><td style="text-align:center">${i.quantity}</td><td style="text-align:end">${fmt(i.unit_price)}</td><td style="text-align:end">${fmt(i.line_total)}</td></tr>`).join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Bordereau ${o.order_number ?? ""}</title>
+<style>
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{margin:0;padding:20px;color:#000}
+.label{border:2px solid #000;padding:16px;max-width:780px;margin:auto}
+.row{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.brand{font-size:22px;font-weight:700;letter-spacing:1px}
+.muted{color:#555;font-size:12px}
+h1{font-size:18px;margin:8px 0}
+.box{border:1px solid #000;padding:10px;margin-top:10px;border-radius:4px}
+.box h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+.big{font-size:28px;font-weight:700;letter-spacing:2px;font-family:monospace}
+.cod{background:#fde047;border:2px solid #000;padding:10px;text-align:center;margin-top:10px;font-size:18px;font-weight:700}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+th,td{border:1px solid #888;padding:5px 6px}
+th{background:#f3f4f6;text-align:start}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media print{body{padding:0}.no-print{display:none}}
+</style></head><body>
+<div class="label">
+  <div class="row">
+    <div><div class="brand">MALAK DIGITAL</div><div class="muted">Bordereau de livraison</div></div>
+    <div style="text-align:end"><div class="muted">N° Commande</div><div style="font-weight:700;font-size:18px">#${o.order_number ?? ""}</div><div class="muted">${new Date(s.created_at).toLocaleString("fr-FR")}</div></div>
+  </div>
+  <div class="grid">
+    <div class="box"><h3>Destinataire</h3>
+      <div style="font-weight:700">${o.customer_first_name ?? ""} ${o.customer_last_name ?? ""}</div>
+      <div>📞 ${o.customer_phone ?? ""}${o.customer_phone_alt ? " / "+o.customer_phone_alt : ""}</div>
+      <div>${o.address ? o.address+"<br>" : ""}${o.commune ?? ""}, ${o.wilayas?.name_fr ?? ""}</div>
+      <div class="muted" style="margin-top:4px">Mode: ${o.shipping_method === "office" ? "Bureau" : "Domicile"}</div>
+    </div>
+    <div class="box"><h3>Transporteur</h3>
+      <div style="font-weight:700;text-transform:uppercase">${s.provider_code}</div>
+      <div class="muted" style="margin-top:6px">N° suivi</div>
+      <div class="big">${s.tracking_number || "—"}</div>
+      <div class="muted" style="margin-top:6px">Statut: ${s.status}</div>
+    </div>
+  </div>
+  <div class="cod">💰 PAIEMENT À LA LIVRAISON — TOTAL: ${fmt(o.total)}</div>
+  <table><thead><tr><th>Produit</th><th style="text-align:center">Qté</th><th style="text-align:end">PU</th><th style="text-align:end">Total</th></tr></thead>
+    <tbody>${itemsHtml}<tr><td colspan="3" style="text-align:end">Sous-total</td><td style="text-align:end">${fmt(o.subtotal)}</td></tr>
+    <tr><td colspan="3" style="text-align:end">Livraison</td><td style="text-align:end">${fmt(o.shipping_cost)}</td></tr>
+    <tr><td colspan="3" style="text-align:end;font-weight:700">TOTAL</td><td style="text-align:end;font-weight:700">${fmt(o.total)}</td></tr></tbody></table>
+  ${o.notes ? `<div class="box"><h3>Notes</h3>${o.notes}</div>` : ""}
+</div>
+<div class="no-print" style="text-align:center;margin-top:14px"><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">🖨️ Imprimer / PDF</button></div>
+<script>setTimeout(()=>window.print(),400)</script>
+</body></html>`;
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) { toast.error("Pop-up bloqué"); return; }
+    w.document.write(html); w.document.close();
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

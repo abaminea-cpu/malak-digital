@@ -1407,7 +1407,8 @@ function LogisticsTab() {
                 <td className="p-3 text-center font-mono text-xs">{s.tracking_number || "—"}</td>
                 <td className="p-3 text-center"><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{s.status}</span></td>
                 <td className="p-3 text-center text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString("fr-FR")}</td>
-                <td className="p-3 text-end">
+                <td className="p-3 text-end whitespace-nowrap">
+                  <Button size="icon" variant="ghost" title="Étiquette PDF" onClick={() => printLabel(s)}>🖨️</Button>
                   <Button size="icon" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" onClick={async () => { if (confirm("Supprimer ?")) { await delShip({ data: { id: s.id } }); toast.success("Supprimé"); qc.invalidateQueries({ queryKey: ["admin-shipments"] }); } }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </td>

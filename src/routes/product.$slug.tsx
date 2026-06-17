@@ -73,7 +73,7 @@ function ProductPage() {
     },
   });
 
-  const [wilayaId, setWilayaIdState] = useState<string>("");
+  const [wilayaId, setWilayaId] = useState<string>("");
   const { data: communes = [] } = useQuery({
     queryKey: ["communes", wilayaId],
     enabled: !!wilayaId,

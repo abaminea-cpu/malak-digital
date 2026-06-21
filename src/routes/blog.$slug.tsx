@@ -68,7 +68,7 @@ function BlogPostPage() {
           </div>
           {post.cover_image && (
             <div className="mt-6 aspect-[16/9] overflow-hidden rounded-2xl border border-border/60">
-              <img src={post.cover_image} alt={post.title} className="h-full w-full object-cover" />
+              <img src={post.cover_image} alt={post.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
             </div>
           )}
           <div className="prose prose-invert mt-8 max-w-none prose-headings:font-display prose-headings:text-foreground prose-a:text-gold prose-strong:text-foreground prose-img:rounded-lg">

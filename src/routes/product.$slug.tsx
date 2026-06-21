@@ -186,7 +186,7 @@ function ProductPage() {
           <div className="space-y-3">
             <div className="aspect-square overflow-hidden rounded-2xl border border-border/60 bg-surface">
               {product.images?.[imgIdx] ? (
-                <img src={product.images[imgIdx]} alt={product.name} className="h-full w-full object-cover" />
+                <img src={product.images[imgIdx]} alt={product.name} loading="eager" decoding="async" fetchPriority="high" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">Aucune image</div>
               )}
@@ -195,7 +195,7 @@ function ProductPage() {
               <div className="flex gap-2 overflow-x-auto">
                 {product.images.map((src: string, i: number) => (
                   <button key={i} onClick={() => setImgIdx(i)} className={`h-20 w-20 flex-none overflow-hidden rounded-lg border ${i === imgIdx ? "border-gold" : "border-border/60"}`}>
-                    <img src={src} alt="" className="h-full w-full object-cover" />
+                    <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>

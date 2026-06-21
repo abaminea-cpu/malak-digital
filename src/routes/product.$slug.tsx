@@ -186,7 +186,7 @@ function ProductPage() {
           <div className="space-y-3">
             <div className="aspect-square overflow-hidden rounded-2xl border border-border/60 bg-surface">
               {product.images?.[imgIdx] ? (
-                <img src={product.images[imgIdx]} alt={product.name} className="h-full w-full object-cover" />
+                <img src={product.images[imgIdx]} alt={product.name} loading="eager" decoding="async" fetchPriority="high" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">Aucune image</div>
               )}

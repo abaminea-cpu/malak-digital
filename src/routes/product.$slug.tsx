@@ -195,7 +195,7 @@ function ProductPage() {
               <div className="flex gap-2 overflow-x-auto">
                 {product.images.map((src: string, i: number) => (
                   <button key={i} onClick={() => setImgIdx(i)} className={`h-20 w-20 flex-none overflow-hidden rounded-lg border ${i === imgIdx ? "border-gold" : "border-border/60"}`}>
-                    <img src={src} alt="" className="h-full w-full object-cover" />
+                    <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>

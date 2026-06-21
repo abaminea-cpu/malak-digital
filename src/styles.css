@@ -149,3 +149,53 @@
 @utility glow-gold {
   box-shadow: 0 0 40px color-mix(in oklab, var(--gold) 25%, transparent);
 }
+
+/* Motion utilities for redesigned home */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+@keyframes float-y-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(10px); }
+}
+@keyframes mesh-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.08); }
+}
+@keyframes mesh-drift-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, 40px) scale(1.12); }
+}
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@utility animate-float {
+  animation: float-y 6s ease-in-out infinite;
+}
+@utility animate-float-delayed {
+  animation: float-y-delayed 7s ease-in-out infinite;
+}
+@utility animate-mesh-drift {
+  animation: mesh-drift 14s ease-in-out infinite;
+}
+@utility animate-mesh-drift-slow {
+  animation: mesh-drift-slow 22s ease-in-out infinite;
+}
+@utility animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 8s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-delayed,
+  .animate-mesh-drift,
+  .animate-mesh-drift-slow,
+  .animate-gradient-x {
+    animation: none !important;
+  }
+}
+

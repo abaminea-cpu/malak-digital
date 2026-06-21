@@ -62,7 +62,7 @@ function HomePage() {
         {/* HERO */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0">
-            <img src={heroImg} alt="" width={1920} height={1080} className="h-full w-full object-cover opacity-60" />
+            <img src={heroImg} alt="" width={1920} height={1080} loading="eager" decoding="async" fetchPriority="high" className="h-full w-full object-cover opacity-60" />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40" />
           </div>
           <div className="container relative mx-auto grid min-h-[88vh] items-center px-4 py-20 md:px-6">

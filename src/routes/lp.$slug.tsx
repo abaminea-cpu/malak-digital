@@ -150,7 +150,7 @@ function LandingPage() {
           </div>
           {heroBg && (
             <div className="relative aspect-square overflow-hidden rounded-2xl border border-border/40 bg-surface">
-              <img src={heroBg} alt={product.name} className="h-full w-full object-cover" />
+              <img src={heroBg} alt={product.name} loading="eager" decoding="async" fetchPriority="high" className="h-full w-full object-cover" />
             </div>
           )}
         </div>

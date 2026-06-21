@@ -196,7 +196,7 @@ function LandingPage() {
             {s.type === "gallery" && (
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {(s.items || []).map((url: string, j: number) => (
-                  <img key={j} src={url} alt="" className="aspect-square rounded-lg object-cover" />
+                  <img key={j} src={url} alt="" loading="lazy" decoding="async" className="aspect-square rounded-lg object-cover" />
                 ))}
               </div>
             )}

@@ -253,8 +253,28 @@ function HomePage() {
               </div>
             )}
           </section>
+
+          {/* CTA */}
+          <section className="mt-32 mb-12">
+            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-600/20 via-white/[0.02] to-transparent p-12 text-center backdrop-blur-md">
+              <h2 className="text-4xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
+                {mlValue(ctaBlock?.title, lang) || "Prêt à commander ?"}
+              </h2>
+              <p className="mt-3 text-slate-400">
+                {mlValue(ctaBlock?.subtitle, lang) || "Paiement à la livraison, partout en Algérie."}
+              </p>
+              <Link
+                to={(ctaBlock?.ctaLink || "/shop") as string}
+                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 py-4 font-bold text-white transition-all hover:scale-105 hover:bg-indigo-500"
+              >
+                {mlValue(ctaBlock?.ctaText, lang) || "Voir la boutique"}
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
+          </section>
         </div>
       </main>
+
       <Footer />
     </div>
   );

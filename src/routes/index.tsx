@@ -31,6 +31,11 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { locale } = useI18n();
+  const lang = locale === "ar" ? "fr" : locale;
+  const hero = useSectionContent<HeroContent>("storefront", "home", "hero");
+  const trust = useSectionContent<ItemsListContent>("storefront", "home", "trust");
+  const ctaBlock = useSectionContent<CTAContent>("storefront", "home", "cta");
+
 
   const { data: featured } = useQuery({
     queryKey: ["featured-products"],

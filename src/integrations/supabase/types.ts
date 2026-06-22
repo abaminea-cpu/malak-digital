@@ -941,6 +941,39 @@ export type Database = {
         }
         Relationships: []
       }
+      site_content: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          page_key: string
+          portal: string
+          section_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          page_key: string
+          portal: string
+          section_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          page_key?: string
+          portal?: string
+          section_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           key: string

@@ -5,7 +5,10 @@ import { Footer } from "@/components/site/Footer";
 import { ArrowRight, ArrowUpRight, Heart, Plus, Wallet, Truck, ShieldCheck, Headphones, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n, formatPrice } from "@/lib/i18n";
+import { useSectionContent, mlValue } from "@/hooks/useSectionContent";
+import type { HeroContent, ItemsListContent, CTAContent } from "@/lib/editorDefaults";
 import heroImg from "@/assets/hero.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,6 +31,11 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { locale } = useI18n();
+  const lang = locale === "ar" ? "fr" : locale;
+  const hero = useSectionContent<HeroContent>("storefront", "home", "hero");
+  const trust = useSectionContent<ItemsListContent>("storefront", "home", "trust");
+  const ctaBlock = useSectionContent<CTAContent>("storefront", "home", "cta");
+
 
   const { data: featured } = useQuery({
     queryKey: ["featured-products"],
@@ -92,31 +100,28 @@ function HomePage() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500" />
                 </span>
-                L'EXCELLENCE DIGITALE ALGÉRIENNE
+                {mlValue(hero?.tagline, lang) || "L'EXCELLENCE DIGITALE ALGÉRIENNE"}
               </div>
 
               <h1
                 className="mb-8 text-6xl font-bold leading-[0.85] tracking-tighter md:text-8xl"
                 style={{ fontFamily: "'Syne', sans-serif" }}
               >
-                Le luxe,
-                <br />
                 <span className="bg-gradient-to-r from-indigo-400 via-white to-indigo-500 bg-clip-text text-transparent animate-gradient-x">
-                  livré chez vous.
+                  {mlValue(hero?.title, lang) || "Le luxe, livré chez vous."}
                 </span>
               </h1>
 
               <p className="mb-10 max-w-xl text-lg leading-relaxed text-slate-400 md:text-xl">
-                Une expérience d'achat haut de gamme, pensée pour l'Algérie.
-                Livraison premium dans les 69 wilayas avec paiement à la réception.
+                {mlValue(hero?.subtitle, lang) || "Une expérience d'achat haut de gamme, pensée pour l'Algérie."}
               </p>
 
               <div className="flex flex-wrap gap-4">
                 <Link
-                  to="/shop"
+                  to={(hero?.ctaLink || "/shop") as string}
                   className="group inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 py-4 font-bold text-white transition-all hover:scale-105 hover:bg-indigo-500 hover:shadow-[0_0_40px_rgba(79,70,229,0.4)]"
                 >
-                  Découvrir la boutique
+                  {mlValue(hero?.ctaText, lang) || "Découvrir la boutique"}
                   <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
                 <Link
@@ -133,7 +138,8 @@ function HomePage() {
               <div className="group relative z-20 [perspective:1000px]">
                 <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 shadow-2xl transition-transform duration-700 group-hover:[transform:rotateY(-5deg)_rotateX(2deg)] animate-float">
                   <img
-                    src={heroImg}
+                    src={hero?.image || heroImg}
+
                     alt="Produit premium Malak Digital"
                     width={800}
                     height={1000}
@@ -177,13 +183,21 @@ function HomePage() {
 
           {/* TRUST BAR */}
           <section className="mt-24 grid grid-cols-2 gap-8 border-t border-white/5 pt-12 md:grid-cols-4">
-            {[
-              { icon: Wallet, title: "Paiement à la livraison", desc: "Payez en espèces dès réception de votre colis." },
-              { icon: Truck, title: "Livraison 69 wilayas", desc: "Partout en Algérie sous 24h à 72h." },
-              { icon: ShieldCheck, title: "Sélection premium", desc: "Uniquement des produits authentiques vérifiés." },
-              { icon: Headphones, title: "Assistance 7j/7", desc: "Une équipe dédiée à votre entière écoute." },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="group flex flex-col gap-4">
+            {(trust?.items?.length
+              ? trust.items.map((it, i) => ({
+                  icon: [Wallet, Truck, ShieldCheck, Headphones][i % 4],
+                  title: mlValue(it.title, lang),
+                  desc: mlValue(it.description, lang),
+                  key: it.id,
+                }))
+              : [
+                  { icon: Wallet, title: "Paiement à la livraison", desc: "Payez en espèces dès réception de votre colis.", key: "w" },
+                  { icon: Truck, title: "Livraison 69 wilayas", desc: "Partout en Algérie sous 24h à 72h.", key: "t" },
+                  { icon: ShieldCheck, title: "Sélection premium", desc: "Uniquement des produits authentiques vérifiés.", key: "s" },
+                  { icon: Headphones, title: "Assistance 7j/7", desc: "Une équipe dédiée à votre entière écoute.", key: "h" },
+                ]
+            ).map(({ icon: Icon, title, desc, key }) => (
+              <div key={key} className="group flex flex-col gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-indigo-400 transition-all duration-300 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-[0_0_30px_rgba(79,70,229,0.4)]">
                   <Icon className="h-6 w-6" />
                 </div>
@@ -193,6 +207,7 @@ function HomePage() {
                 </div>
               </div>
             ))}
+
           </section>
 
           {/* PRODUCTS */}
@@ -238,8 +253,28 @@ function HomePage() {
               </div>
             )}
           </section>
+
+          {/* CTA */}
+          <section className="mt-32 mb-12">
+            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-600/20 via-white/[0.02] to-transparent p-12 text-center backdrop-blur-md">
+              <h2 className="text-4xl font-bold" style={{ fontFamily: "'Syne', sans-serif" }}>
+                {mlValue(ctaBlock?.title, lang) || "Prêt à commander ?"}
+              </h2>
+              <p className="mt-3 text-slate-400">
+                {mlValue(ctaBlock?.subtitle, lang) || "Paiement à la livraison, partout en Algérie."}
+              </p>
+              <Link
+                to={(ctaBlock?.ctaLink || "/shop") as string}
+                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 py-4 font-bold text-white transition-all hover:scale-105 hover:bg-indigo-500"
+              >
+                {mlValue(ctaBlock?.ctaText, lang) || "Voir la boutique"}
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
+          </section>
         </div>
       </main>
+
       <Footer />
     </div>
   );

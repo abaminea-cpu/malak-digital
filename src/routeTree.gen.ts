@@ -24,6 +24,7 @@ import { Route as CategorieSlugRouteImport } from './routes/categorie.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedAdminCmsRouteImport } from './routes/_authenticated/admin.cms'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -99,6 +100,11 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminCmsRoute = AuthenticatedAdminCmsRouteImport.update({
+  id: '/cms',
+  path: '/cms',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,11 +116,12 @@ export interface FileRoutesByFullPath {
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/categorie/$slug': typeof CategorieSlugRoute
   '/lp/$slug': typeof LpSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/admin/cms': typeof AuthenticatedAdminCmsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,11 +133,12 @@ export interface FileRoutesByTo {
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof AuthenticatedAccountRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/categorie/$slug': typeof CategorieSlugRoute
   '/lp/$slug': typeof LpSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/admin/cms': typeof AuthenticatedAdminCmsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -144,11 +152,12 @@ export interface FileRoutesById {
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/categorie/$slug': typeof CategorieSlugRoute
   '/lp/$slug': typeof LpSlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/_authenticated/admin/cms': typeof AuthenticatedAdminCmsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/categorie/$slug'
     | '/lp/$slug'
     | '/product/$slug'
+    | '/admin/cms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/categorie/$slug'
     | '/lp/$slug'
     | '/product/$slug'
+    | '/admin/cms'
   id:
     | '__root__'
     | '/'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/categorie/$slug'
     | '/lp/$slug'
     | '/product/$slug'
+    | '/_authenticated/admin/cms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -324,17 +336,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/cms': {
+      id: '/_authenticated/admin/cms'
+      path: '/cms'
+      fullPath: '/admin/cms'
+      preLoaderRoute: typeof AuthenticatedAdminCmsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCmsRoute: typeof AuthenticatedAdminCmsRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCmsRoute: AuthenticatedAdminCmsRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =

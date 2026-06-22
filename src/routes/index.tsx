@@ -183,13 +183,21 @@ function HomePage() {
 
           {/* TRUST BAR */}
           <section className="mt-24 grid grid-cols-2 gap-8 border-t border-white/5 pt-12 md:grid-cols-4">
-            {[
-              { icon: Wallet, title: "Paiement à la livraison", desc: "Payez en espèces dès réception de votre colis." },
-              { icon: Truck, title: "Livraison 69 wilayas", desc: "Partout en Algérie sous 24h à 72h." },
-              { icon: ShieldCheck, title: "Sélection premium", desc: "Uniquement des produits authentiques vérifiés." },
-              { icon: Headphones, title: "Assistance 7j/7", desc: "Une équipe dédiée à votre entière écoute." },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="group flex flex-col gap-4">
+            {(trust?.items?.length
+              ? trust.items.map((it, i) => ({
+                  icon: [Wallet, Truck, ShieldCheck, Headphones][i % 4],
+                  title: mlValue(it.title, lang),
+                  desc: mlValue(it.description, lang),
+                  key: it.id,
+                }))
+              : [
+                  { icon: Wallet, title: "Paiement à la livraison", desc: "Payez en espèces dès réception de votre colis.", key: "w" },
+                  { icon: Truck, title: "Livraison 69 wilayas", desc: "Partout en Algérie sous 24h à 72h.", key: "t" },
+                  { icon: ShieldCheck, title: "Sélection premium", desc: "Uniquement des produits authentiques vérifiés.", key: "s" },
+                  { icon: Headphones, title: "Assistance 7j/7", desc: "Une équipe dédiée à votre entière écoute.", key: "h" },
+                ]
+            ).map(({ icon: Icon, title, desc, key }) => (
+              <div key={key} className="group flex flex-col gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-indigo-400 transition-all duration-300 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-[0_0_30px_rgba(79,70,229,0.4)]">
                   <Icon className="h-6 w-6" />
                 </div>
@@ -199,6 +207,7 @@ function HomePage() {
                 </div>
               </div>
             ))}
+
           </section>
 
           {/* PRODUCTS */}

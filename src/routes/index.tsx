@@ -5,7 +5,10 @@ import { Footer } from "@/components/site/Footer";
 import { ArrowRight, ArrowUpRight, Heart, Plus, Wallet, Truck, ShieldCheck, Headphones, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n, formatPrice } from "@/lib/i18n";
+import { useSectionContent, mlValue } from "@/hooks/useSectionContent";
+import type { HeroContent, ItemsListContent, CTAContent } from "@/lib/editorDefaults";
 import heroImg from "@/assets/hero.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({

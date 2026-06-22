@@ -100,31 +100,28 @@ function HomePage() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500" />
                 </span>
-                L'EXCELLENCE DIGITALE ALGÉRIENNE
+                {mlValue(hero?.tagline, lang) || "L'EXCELLENCE DIGITALE ALGÉRIENNE"}
               </div>
 
               <h1
                 className="mb-8 text-6xl font-bold leading-[0.85] tracking-tighter md:text-8xl"
                 style={{ fontFamily: "'Syne', sans-serif" }}
               >
-                Le luxe,
-                <br />
                 <span className="bg-gradient-to-r from-indigo-400 via-white to-indigo-500 bg-clip-text text-transparent animate-gradient-x">
-                  livré chez vous.
+                  {mlValue(hero?.title, lang) || "Le luxe, livré chez vous."}
                 </span>
               </h1>
 
               <p className="mb-10 max-w-xl text-lg leading-relaxed text-slate-400 md:text-xl">
-                Une expérience d'achat haut de gamme, pensée pour l'Algérie.
-                Livraison premium dans les 69 wilayas avec paiement à la réception.
+                {mlValue(hero?.subtitle, lang) || "Une expérience d'achat haut de gamme, pensée pour l'Algérie."}
               </p>
 
               <div className="flex flex-wrap gap-4">
                 <Link
-                  to="/shop"
+                  to={(hero?.ctaLink || "/shop") as string}
                   className="group inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 py-4 font-bold text-white transition-all hover:scale-105 hover:bg-indigo-500 hover:shadow-[0_0_40px_rgba(79,70,229,0.4)]"
                 >
-                  Découvrir la boutique
+                  {mlValue(hero?.ctaText, lang) || "Découvrir la boutique"}
                   <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
                 <Link
@@ -141,7 +138,8 @@ function HomePage() {
               <div className="group relative z-20 [perspective:1000px]">
                 <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 shadow-2xl transition-transform duration-700 group-hover:[transform:rotateY(-5deg)_rotateX(2deg)] animate-float">
                   <img
-                    src={heroImg}
+                    src={hero?.image || heroImg}
+
                     alt="Produit premium Malak Digital"
                     width={800}
                     height={1000}

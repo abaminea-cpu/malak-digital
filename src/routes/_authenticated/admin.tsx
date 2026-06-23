@@ -61,9 +61,14 @@ function AdminPage() {
       <RealtimeOrdersListener />
       <Header />
       <main className="container mx-auto flex-1 px-4 py-10 md:px-6">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-semibold">Administration</h1>
-          <div className="mt-2 h-px w-16 bg-gradient-gold" />
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-semibold">Administration</h1>
+            <div className="mt-2 h-px w-16 bg-gradient-gold" />
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <a href="/admin/cms">Éditeur CMS</a>
+          </Button>
         </div>
 
         <Tabs defaultValue="dashboard">

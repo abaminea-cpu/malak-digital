@@ -21,7 +21,7 @@ import { ProgrammesEditor } from "@/components/editor/sections/ProgrammesEditor"
 import { CTAEditor } from "@/components/editor/sections/CTAEditor";
 import { Loader2, Save, RotateCcw, Monitor, Tablet, Smartphone } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin/cms")({
+export const Route = createFileRoute("/_authenticated/admin_/cms")({
   head: () => ({ meta: [{ title: "CMS — Malak Digital" }, { name: "robots", content: "noindex" }] }),
   component: PageEditorPage,
 });

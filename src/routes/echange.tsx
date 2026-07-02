@@ -33,10 +33,12 @@ type OrderRow = Awaited<ReturnType<typeof searchOrdersByPhoneFn>>[number];
 function ExchangePage() {
   const searchFn = useServerFn(searchOrdersByPhoneFn);
   const submitFn = useServerFn(createExchangeRequestFn);
+  const cfgFn = useServerFn(getExchangeConfigFn);
   const { data: cfg } = useQuery({
     queryKey: ["exchange-config"],
-    queryFn: () => useServerFn(getExchangeConfigFn)({}),
+    queryFn: () => cfgFn({}),
   });
+
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [phone, setPhone] = useState("");

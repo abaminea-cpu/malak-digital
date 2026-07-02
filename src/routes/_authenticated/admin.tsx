@@ -29,6 +29,8 @@ import { adminListCouponsFn, adminUpsertCouponFn, adminDeleteCouponFn } from "@/
 import { adminListAllReviewsFn, adminSetReviewStatusFn } from "@/lib/engagement.functions";
 import { adminListShipmentsFn, adminUpsertShipmentFn, adminDeleteShipmentFn, adminListStockMovementsFn, adminAddStockMovementFn, adminLowStockFn, adminExportOrdersCsvFn } from "@/lib/logistics.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
+import { ExchangesTab } from "@/components/admin/ExchangesTab";
+
 import { LandingSectionsEditor } from "@/components/admin/LandingSectionsEditor";
 import { RealtimeOrdersListener } from "@/components/admin/RealtimeOrdersListener";
 import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search, Star, Tag } from "lucide-react";
@@ -86,7 +88,9 @@ function AdminPage() {
             <TabsTrigger value="reviews">Avis</TabsTrigger>
             <TabsTrigger value="logistics">Logistique</TabsTrigger>
             <TabsTrigger value="stock">Stock</TabsTrigger>
+            <TabsTrigger value="exchanges">Échanges</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="dashboard" className="mt-6"><DashboardTab /></TabsContent>
           <TabsContent value="products" className="mt-6"><ProductsTab /></TabsContent>
@@ -101,7 +105,9 @@ function AdminPage() {
           <TabsContent value="reviews" className="mt-6"><ReviewsTab /></TabsContent>
           <TabsContent value="logistics" className="mt-6"><LogisticsTab /></TabsContent>
           <TabsContent value="stock" className="mt-6"><StockTab /></TabsContent>
+          <TabsContent value="exchanges" className="mt-6"><ExchangesTab /></TabsContent>
         </Tabs>
+
       </main>
       <Footer />
     </div>

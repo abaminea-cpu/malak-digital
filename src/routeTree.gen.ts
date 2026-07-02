@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as OrderConfirmedRouteImport } from './routes/order-confirmed'
+import { Route as EchangeRouteImport } from './routes/echange'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -39,6 +40,11 @@ const ShopRoute = ShopRouteImport.update({
 const OrderConfirmedRoute = OrderConfirmedRouteImport.update({
   id: '/order-confirmed',
   path: '/order-confirmed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EchangeRoute = EchangeRouteImport.update({
+  id: '/echange',
+  path: '/echange',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/contact': typeof ContactRoute
+  '/echange': typeof EchangeRoute
   '/order-confirmed': typeof OrderConfirmedRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/contact': typeof ContactRoute
+  '/echange': typeof EchangeRoute
   '/order-confirmed': typeof OrderConfirmedRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/contact': typeof ContactRoute
+  '/echange': typeof EchangeRoute
   '/order-confirmed': typeof OrderConfirmedRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blog'
     | '/contact'
+    | '/echange'
     | '/order-confirmed'
     | '/shop'
     | '/sitemap.xml'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blog'
     | '/contact'
+    | '/echange'
     | '/order-confirmed'
     | '/shop'
     | '/sitemap.xml'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blog'
     | '/contact'
+    | '/echange'
     | '/order-confirmed'
     | '/shop'
     | '/sitemap.xml'
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BlogRoute: typeof BlogRouteWithChildren
   ContactRoute: typeof ContactRoute
+  EchangeRoute: typeof EchangeRoute
   OrderConfirmedRoute: typeof OrderConfirmedRoute
   ShopRoute: typeof ShopRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       path: '/order-confirmed'
       fullPath: '/order-confirmed'
       preLoaderRoute: typeof OrderConfirmedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/echange': {
+      id: '/echange'
+      path: '/echange'
+      fullPath: '/echange'
+      preLoaderRoute: typeof EchangeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -378,6 +398,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BlogRoute: BlogRouteWithChildren,
   ContactRoute: ContactRoute,
+  EchangeRoute: EchangeRoute,
   OrderConfirmedRoute: OrderConfirmedRoute,
   ShopRoute: ShopRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

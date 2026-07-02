@@ -338,6 +338,56 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_requests: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string
+          id: string
+          order_id: string
+          photos: string[]
+          reason: string | null
+          request_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone: string
+          id?: string
+          order_id: string
+          photos?: string[]
+          reason?: string | null
+          request_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string
+          id?: string
+          order_id?: string
+          photos?: string[]
+          reason?: string | null
+          request_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       landing_pages: {
         Row: {
           countdown_end: string | null

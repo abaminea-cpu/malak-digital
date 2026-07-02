@@ -28,9 +28,11 @@ export function Header() {
     { to: "/", label: t("nav.home") },
     { to: "/shop", label: t("nav.shop") },
     { to: "/blog", label: "Blog" },
+    { to: "/echange", label: "Échange" },
     { to: "/about", label: t("nav.about") },
     { to: "/contact", label: t("nav.contact") },
   ] as const;
+
 
 
   const langs: { code: Locale; label: string }[] = [

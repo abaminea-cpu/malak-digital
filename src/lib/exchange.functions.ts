@@ -92,6 +92,13 @@ export const createExchangeRequestFn = createServerFn({ method: "POST" })
       .select("id, request_number")
       .single();
     if (error) throw error;
+
+    // Best-effort push to Google Sheets (never fails the request)
+    try {
+      const { syncExchangeToSheetsSafe } = await import("./sheets.functions");
+      await syncExchangeToSheetsSafe(inserted.id);
+    } catch (e) { console.error("[sheets] hook error", e); }
+
     return inserted;
   });
 

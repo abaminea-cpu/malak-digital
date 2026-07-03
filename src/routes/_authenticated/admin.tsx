@@ -30,10 +30,13 @@ import { adminListAllReviewsFn, adminSetReviewStatusFn } from "@/lib/engagement.
 import { adminListShipmentsFn, adminUpsertShipmentFn, adminDeleteShipmentFn, adminListStockMovementsFn, adminAddStockMovementFn, adminLowStockFn, adminExportOrdersCsvFn } from "@/lib/logistics.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
 import { ExchangesTab } from "@/components/admin/ExchangesTab";
+import { SheetsTab } from "@/components/admin/SheetsTab";
+import { UsersTab } from "@/components/admin/UsersTab";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import { LandingSectionsEditor } from "@/components/admin/LandingSectionsEditor";
 import { RealtimeOrdersListener } from "@/components/admin/RealtimeOrdersListener";
-import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search, Star, Tag } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search, Star, Tag, Menu, LayoutDashboard, FileSpreadsheet, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Malak Digital" }, { name: "robots", content: "noindex" }] }),
@@ -42,10 +45,31 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const STATUSES = ["new","confirmed","preparing","shipped","delivered","cancelled","returned"] as const;
 
+const NAV_ITEMS: { value: string; label: string }[] = [
+  { value: "dashboard", label: "Tableau de bord" },
+  { value: "products", label: "Produits" },
+  { value: "categories", label: "Catégories" },
+  { value: "orders", label: "Commandes" },
+  { value: "crm", label: "CRM" },
+  { value: "users", label: "Utilisateurs" },
+  { value: "landing", label: "Landing" },
+  { value: "shipping", label: "Livraison" },
+  { value: "blog", label: "Blog" },
+  { value: "marketing", label: "Marketing" },
+  { value: "promo", label: "Promo" },
+  { value: "reviews", label: "Avis" },
+  { value: "logistics", label: "Logistique" },
+  { value: "stock", label: "Stock" },
+  { value: "exchanges", label: "Échanges" },
+  { value: "sheets", label: "Google Sheets" },
+];
+
 function AdminPage() {
   const navigate = useNavigate();
   const check = useServerFn(isAdminFn);
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [tab, setTab] = useState("dashboard");
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     check({}).then((r) => {
@@ -58,56 +82,80 @@ function AdminPage() {
     return <div className="flex min-h-screen flex-col"><Header /><main className="flex-1 grid place-items-center"><Loader2 className="h-6 w-6 animate-spin text-gold" /></main><Footer /></div>;
   }
 
+  const NavList = ({ onPick }: { onPick?: () => void }) => (
+    <nav className="flex flex-col gap-1">
+      {NAV_ITEMS.map((it) => (
+        <button
+          key={it.value}
+          onClick={() => { setTab(it.value); onPick?.(); }}
+          className={`rounded-lg px-3 py-2 text-left text-sm transition ${
+            tab === it.value
+              ? "bg-gradient-gold text-primary-foreground font-medium"
+              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          }`}
+        >
+          {it.label}
+        </button>
+      ))}
+      <a
+        href="/admin/cms"
+        className="mt-2 rounded-lg border border-border/60 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+      >
+        Éditeur CMS
+      </a>
+    </nav>
+  );
+
   return (
     <div className="flex min-h-screen flex-col">
       <RealtimeOrdersListener />
       <Header />
-      <main className="container mx-auto flex-1 px-4 py-10 md:px-6">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-semibold">Administration</h1>
-            <div className="mt-2 h-px w-16 bg-gradient-gold" />
+      <main className="container mx-auto flex-1 px-4 py-6 md:px-6 md:py-10">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Sheet open={navOpen} onOpenChange={setNavOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="lg:hidden" aria-label="Menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72">
+                <div className="mt-6"><NavList onPick={() => setNavOpen(false)} /></div>
+              </SheetContent>
+            </Sheet>
+            <div>
+              <h1 className="font-display text-2xl font-semibold md:text-3xl">Administration</h1>
+              <div className="mt-2 h-px w-16 bg-gradient-gold" />
+            </div>
           </div>
-          <Button asChild variant="outline" size="sm">
-            <a href="/admin/cms">Éditeur CMS</a>
-          </Button>
         </div>
 
-        <Tabs defaultValue="dashboard">
-          <TabsList className="flex-wrap">
-            <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
-            <TabsTrigger value="products">Produits</TabsTrigger>
-            <TabsTrigger value="categories">Catégories</TabsTrigger>
-            <TabsTrigger value="orders">Commandes</TabsTrigger>
-            <TabsTrigger value="crm">CRM</TabsTrigger>
-            <TabsTrigger value="landing">Landing</TabsTrigger>
-            <TabsTrigger value="shipping">Livraison</TabsTrigger>
-            <TabsTrigger value="blog">Blog</TabsTrigger>
-            <TabsTrigger value="marketing">Marketing</TabsTrigger>
-            <TabsTrigger value="promo">Promo</TabsTrigger>
-            <TabsTrigger value="reviews">Avis</TabsTrigger>
-            <TabsTrigger value="logistics">Logistique</TabsTrigger>
-            <TabsTrigger value="stock">Stock</TabsTrigger>
-            <TabsTrigger value="exchanges">Échanges</TabsTrigger>
-          </TabsList>
+        <div className="flex gap-6">
+          <aside className="hidden w-56 shrink-0 lg:block">
+            <div className="sticky top-24"><NavList /></div>
+          </aside>
 
-
-          <TabsContent value="dashboard" className="mt-6"><DashboardTab /></TabsContent>
-          <TabsContent value="products" className="mt-6"><ProductsTab /></TabsContent>
-          <TabsContent value="categories" className="mt-6"><CategoriesTab /></TabsContent>
-          <TabsContent value="orders" className="mt-6"><OrdersTab /></TabsContent>
-          <TabsContent value="crm" className="mt-6"><CRMTab /></TabsContent>
-          <TabsContent value="landing" className="mt-6"><LandingTab /></TabsContent>
-          <TabsContent value="shipping" className="mt-6"><ShippingTab /></TabsContent>
-          <TabsContent value="blog" className="mt-6"><BlogTab /></TabsContent>
-          <TabsContent value="marketing" className="mt-6"><MarketingTab /></TabsContent>
-          <TabsContent value="promo" className="mt-6"><PromoTab /></TabsContent>
-          <TabsContent value="reviews" className="mt-6"><ReviewsTab /></TabsContent>
-          <TabsContent value="logistics" className="mt-6"><LogisticsTab /></TabsContent>
-          <TabsContent value="stock" className="mt-6"><StockTab /></TabsContent>
-          <TabsContent value="exchanges" className="mt-6"><ExchangesTab /></TabsContent>
-        </Tabs>
-
+          <div className="min-w-0 flex-1">
+            <Tabs value={tab} onValueChange={setTab}>
+              <TabsContent value="dashboard" className="mt-0"><DashboardTab /></TabsContent>
+              <TabsContent value="products" className="mt-0"><ProductsTab /></TabsContent>
+              <TabsContent value="categories" className="mt-0"><CategoriesTab /></TabsContent>
+              <TabsContent value="orders" className="mt-0"><OrdersTab /></TabsContent>
+              <TabsContent value="crm" className="mt-0"><CRMTab /></TabsContent>
+              <TabsContent value="users" className="mt-0"><UsersTab /></TabsContent>
+              <TabsContent value="landing" className="mt-0"><LandingTab /></TabsContent>
+              <TabsContent value="shipping" className="mt-0"><ShippingTab /></TabsContent>
+              <TabsContent value="blog" className="mt-0"><BlogTab /></TabsContent>
+              <TabsContent value="marketing" className="mt-0"><MarketingTab /></TabsContent>
+              <TabsContent value="promo" className="mt-0"><PromoTab /></TabsContent>
+              <TabsContent value="reviews" className="mt-0"><ReviewsTab /></TabsContent>
+              <TabsContent value="logistics" className="mt-0"><LogisticsTab /></TabsContent>
+              <TabsContent value="stock" className="mt-0"><StockTab /></TabsContent>
+              <TabsContent value="exchanges" className="mt-0"><ExchangesTab /></TabsContent>
+              <TabsContent value="sheets" className="mt-0"><SheetsTab /></TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </main>
       <Footer />
     </div>

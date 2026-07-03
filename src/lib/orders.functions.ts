@@ -101,6 +101,12 @@ export const createOrderFn = createServerFn({ method: "POST" })
     const { error: iErr } = await supabaseAdmin.from("order_items").insert(itemsWithOrderId);
     if (iErr) throw new Error("Erreur lors de l'enregistrement des produits");
 
+    // Best-effort push to Google Sheets (never fails the order)
+    try {
+      const { syncOrderToSheetsSafe } = await import("./sheets.functions");
+      await syncOrderToSheetsSafe(order.id);
+    } catch (e) { console.error("[sheets] hook error", e); }
+
     return {
       ok: true as const,
       order_number: order.order_number,

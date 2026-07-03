@@ -908,6 +908,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sheets_config: {
+        Row: {
+          created_at: string
+          exchanges_enabled: boolean
+          exchanges_sheet_name: string
+          exchanges_spreadsheet_id: string | null
+          id: string
+          orders_enabled: boolean
+          orders_sheet_name: string
+          orders_spreadsheet_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exchanges_enabled?: boolean
+          exchanges_sheet_name?: string
+          exchanges_spreadsheet_id?: string | null
+          id?: string
+          orders_enabled?: boolean
+          orders_sheet_name?: string
+          orders_spreadsheet_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exchanges_enabled?: boolean
+          exchanges_sheet_name?: string
+          exchanges_spreadsheet_id?: string | null
+          id?: string
+          orders_enabled?: boolean
+          orders_sheet_name?: string
+          orders_spreadsheet_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shipments: {
         Row: {
           created_at: string

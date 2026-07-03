@@ -30,10 +30,13 @@ import { adminListAllReviewsFn, adminSetReviewStatusFn } from "@/lib/engagement.
 import { adminListShipmentsFn, adminUpsertShipmentFn, adminDeleteShipmentFn, adminListStockMovementsFn, adminAddStockMovementFn, adminLowStockFn, adminExportOrdersCsvFn } from "@/lib/logistics.functions";
 import { ImageUploader, SingleImageUploader } from "@/components/admin/ImageUploader";
 import { ExchangesTab } from "@/components/admin/ExchangesTab";
+import { SheetsTab } from "@/components/admin/SheetsTab";
+import { UsersTab } from "@/components/admin/UsersTab";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import { LandingSectionsEditor } from "@/components/admin/LandingSectionsEditor";
 import { RealtimeOrdersListener } from "@/components/admin/RealtimeOrdersListener";
-import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search, Star, Tag } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, ShoppingBag, Package, Truck, DollarSign, Phone, MessageCircle, Search, Star, Tag, Menu, LayoutDashboard, FileSpreadsheet, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Malak Digital" }, { name: "robots", content: "noindex" }] }),

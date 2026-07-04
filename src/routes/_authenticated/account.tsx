@@ -6,7 +6,7 @@ import { Footer } from "@/components/site/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDA } from "@/lib/format";
-import { isAdminFn, claimFirstAdminFn } from "@/lib/roles.functions";
+import { isAdminFn } from "@/lib/roles.functions";
 import { toast } from "sonner";
 import { LogOut, Crown } from "lucide-react";
 
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/_authenticated/account")({
 function AccountPage() {
   const navigate = useNavigate();
   const checkAdmin = useServerFn(isAdminFn);
-  const claimAdmin = useServerFn(claimFirstAdminFn);
 
   const { data: admin } = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdmin({}) });
   const { data: orders = [] } = useQuery({
@@ -37,15 +36,6 @@ function AccountPage() {
     navigate({ to: "/auth", replace: true });
   }
 
-  async function tryClaimAdmin() {
-    try {
-      const r: any = await claimAdmin({});
-      if (r.granted) toast.success("Vous êtes désormais administrateur !");
-      else if (r.taken) toast.error("Un admin existe déjà.");
-      window.location.reload();
-    } catch (e: any) { toast.error(e.message ?? "Erreur"); }
-  }
-
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -60,15 +50,6 @@ function AccountPage() {
           </div>
         </div>
 
-        {!admin?.isAdmin && (
-          <div className="mb-6 flex items-center justify-between rounded-xl border border-gold/30 bg-gold/5 p-4">
-            <div>
-              <div className="text-sm font-medium">Première installation ?</div>
-              <div className="text-xs text-muted-foreground">Si aucun admin n'existe, vous pouvez réclamer le rôle d'administrateur.</div>
-            </div>
-            <Button size="sm" variant="outline" onClick={tryClaimAdmin}>Devenir admin</Button>
-          </div>
-        )}
 
         <h2 className="mb-4 font-display text-xl">Mes commandes</h2>
         {orders.length === 0 ? (

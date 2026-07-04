@@ -88,3 +88,72 @@ export const adminDeleteUserFn = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+const CreateUserInput = z.object({
+  email: z.string().trim().email().max(160),
+  password: z.string().min(8).max(128),
+  full_name: z.string().trim().max(120).optional().or(z.literal("")),
+  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  is_admin: z.boolean().optional(),
+});
+
+export const adminCreateUserFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => CreateUserInput.parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: data.full_name || null,
+        phone: data.phone || null,
+      },
+    });
+    if (error || !created?.user) throw error ?? new Error("Erreur de création");
+    // Ensure profile fields (trigger inserts too, but upsert to be safe)
+    await supabaseAdmin.from("profiles").upsert({
+      id: created.user.id,
+      full_name: data.full_name || null,
+      phone: data.phone || null,
+    }, { onConflict: "id" });
+    if (data.is_admin) {
+      await supabaseAdmin.from("user_roles").insert({ user_id: created.user.id, role: "admin" });
+    }
+    return { ok: true, id: created.user.id };
+  });
+
+const UpdateUserInput = z.object({
+  user_id: z.string().uuid(),
+  email: z.string().trim().email().max(160).optional(),
+  full_name: z.string().trim().max(120).nullable().optional(),
+  phone: z.string().trim().max(30).nullable().optional(),
+  password: z.string().min(8).max(128).optional().or(z.literal("")),
+});
+
+export const adminUpdateUserFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => UpdateUserInput.parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const authPatch: any = {};
+    if (data.email) authPatch.email = data.email;
+    if (data.password) authPatch.password = data.password;
+    if (Object.keys(authPatch).length > 0) {
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, authPatch);
+      if (error) throw error;
+    }
+
+    if (data.full_name !== undefined || data.phone !== undefined) {
+      const patch: any = { id: data.user_id };
+      if (data.full_name !== undefined) patch.full_name = data.full_name || null;
+      if (data.phone !== undefined) patch.phone = data.phone || null;
+      const { error } = await supabaseAdmin.from("profiles").upsert(patch, { onConflict: "id" });
+      if (error) throw error;
+    }
+    return { ok: true };
+  });

@@ -18,7 +18,6 @@ export const Route = createFileRoute("/_authenticated/account")({
 function AccountPage() {
   const navigate = useNavigate();
   const checkAdmin = useServerFn(isAdminFn);
-  const claimAdmin = useServerFn(claimFirstAdminFn);
 
   const { data: admin } = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdmin({}) });
   const { data: orders = [] } = useQuery({
@@ -35,15 +34,6 @@ function AccountPage() {
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
-  }
-
-  async function tryClaimAdmin() {
-    try {
-      const r: any = await claimAdmin({});
-      if (r.granted) toast.success("Vous êtes désormais administrateur !");
-      else if (r.taken) toast.error("Un admin existe déjà.");
-      window.location.reload();
-    } catch (e: any) { toast.error(e.message ?? "Erreur"); }
   }
 
   return (

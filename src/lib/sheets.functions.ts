@@ -9,6 +9,16 @@ async function requireAdmin(supabase: any, userId: string) {
   if (!data) throw new Error("Forbidden: admin only");
 }
 
+function extractSpreadsheetId(v?: string | null): string | null {
+  if (!v) return null;
+  const s = v.trim();
+  if (!s) return null;
+  const m = s.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9-_]{20,}$/.test(s)) return s;
+  return null;
+}
+
 async function loadConfig() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
@@ -16,6 +26,10 @@ async function loadConfig() {
     .select("*")
     .eq("id", "global")
     .maybeSingle();
+  if (data) {
+    data.orders_spreadsheet_id = extractSpreadsheetId(data.orders_spreadsheet_id);
+    data.exchanges_spreadsheet_id = extractSpreadsheetId(data.exchanges_spreadsheet_id);
+  }
   return data;
 }
 

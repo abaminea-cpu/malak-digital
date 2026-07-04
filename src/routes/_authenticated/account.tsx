@@ -60,15 +60,6 @@ function AccountPage() {
           </div>
         </div>
 
-        {!admin?.isAdmin && (
-          <div className="mb-6 flex items-center justify-between rounded-xl border border-gold/30 bg-gold/5 p-4">
-            <div>
-              <div className="text-sm font-medium">Première installation ?</div>
-              <div className="text-xs text-muted-foreground">Si aucun admin n'existe, vous pouvez réclamer le rôle d'administrateur.</div>
-            </div>
-            <Button size="sm" variant="outline" onClick={tryClaimAdmin}>Devenir admin</Button>
-          </div>
-        )}
 
         <h2 className="mb-4 font-display text-xl">Mes commandes</h2>
         {orders.length === 0 ? (

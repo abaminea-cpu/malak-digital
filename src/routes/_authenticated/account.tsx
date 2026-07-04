@@ -6,7 +6,7 @@ import { Footer } from "@/components/site/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDA } from "@/lib/format";
-import { isAdminFn, claimFirstAdminFn } from "@/lib/roles.functions";
+import { isAdminFn } from "@/lib/roles.functions";
 import { toast } from "sonner";
 import { LogOut, Crown } from "lucide-react";
 

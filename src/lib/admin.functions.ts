@@ -137,10 +137,60 @@ export const adminStatsFn = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: orders } = await supabaseAdmin.from("orders").select("total, status, created_at");
-    const totalRevenue = (orders ?? []).filter(o => o.status !== "cancelled").reduce((s, o) => s + Number(o.total), 0);
-    const totalOrders = orders?.length ?? 0;
-    const newOrders = (orders ?? []).filter(o => o.status === "new").length;
-    const { count: productCount } = await supabaseAdmin.from("products").select("id", { count: "exact", head: true });
-    return { totalRevenue, totalOrders, newOrders, productCount: productCount ?? 0 };
+    const { data: orders } = await supabaseAdmin
+      .from("orders")
+      .select("id, order_number, total, status, created_at, customer_first_name, customer_last_name, wilaya_id, wilayas(name_fr)")
+      .order("created_at", { ascending: false });
+    const all = orders ?? [];
+    const nonCancelled = all.filter((o) => o.status !== "cancelled");
+    const totalRevenue = nonCancelled.reduce((s, o) => s + Number(o.total), 0);
+
+    const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const start7 = startToday - 6 * 86400000;
+    const start30 = startToday - 29 * 86400000;
+    const ts = (o: any) => new Date(o.created_at).getTime();
+
+    const todayOrders = all.filter((o) => ts(o) >= startToday);
+    const revenueToday = todayOrders.filter((o) => o.status !== "cancelled").reduce((s, o) => s + Number(o.total), 0);
+    const revenue7 = all.filter((o) => ts(o) >= start7 && o.status !== "cancelled").reduce((s, o) => s + Number(o.total), 0);
+    const revenue30 = all.filter((o) => ts(o) >= start30 && o.status !== "cancelled").reduce((s, o) => s + Number(o.total), 0);
+
+    const totalOrders = all.length;
+    const newOrders = all.filter((o) => o.status === "new").length;
+    const preparingOrders = all.filter((o) => o.status === "preparing" || o.status === "confirmed").length;
+    const deliveredOrders = all.filter((o) => o.status === "delivered").length;
+    const cancelledOrders = all.filter((o) => o.status === "cancelled").length;
+    const avgBasket = nonCancelled.length ? Math.round(totalRevenue / nonCancelled.length) : 0;
+
+    const [{ count: productCount }, { count: userCount }, { count: exchangesPending }, { data: lowStock }] = await Promise.all([
+      supabaseAdmin.from("products").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("exchange_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      supabaseAdmin.from("products").select("id, name, stock").lte("stock", 5).order("stock", { ascending: true }).limit(5),
+    ]);
+
+    // 7-day chart
+    const chart: { day: string; revenue: number; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(startToday - i * 86400000);
+      const next = d.getTime() + 86400000;
+      const rows = all.filter((o) => ts(o) >= d.getTime() && ts(o) < next && o.status !== "cancelled");
+      chart.push({
+        day: d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }),
+        revenue: rows.reduce((s, o) => s + Number(o.total), 0),
+        count: rows.length,
+      });
+    }
+
+    return {
+      totalRevenue, revenueToday, revenue7, revenue30,
+      totalOrders, newOrders, preparingOrders, deliveredOrders, cancelledOrders, avgBasket,
+      productCount: productCount ?? 0,
+      userCount: userCount ?? 0,
+      exchangesPending: exchangesPending ?? 0,
+      lowStock: lowStock ?? [],
+      recentOrders: all.slice(0, 8),
+      chart,
+    };
   });

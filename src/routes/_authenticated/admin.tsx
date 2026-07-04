@@ -164,24 +164,102 @@ function AdminPage() {
 
 function DashboardTab() {
   const stats = useServerFn(adminStatsFn);
-  const { data } = useQuery({ queryKey: ["admin-stats"], queryFn: () => stats({}) });
+  const { data, isLoading } = useQuery({ queryKey: ["admin-stats"], queryFn: () => stats({}) });
+
+  if (isLoading || !data) {
+    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-gold" /></div>;
+  }
+
   const cards = [
-    { label: "Revenus totaux", value: data ? formatDA(data.totalRevenue) : "—", icon: DollarSign },
-    { label: "Commandes", value: data?.totalOrders ?? "—", icon: ShoppingBag },
-    { label: "Nouvelles", value: data?.newOrders ?? "—", icon: Package },
-    { label: "Produits", value: data?.productCount ?? "—", icon: Truck },
+    { label: "Revenus (total)", value: formatDA(data.totalRevenue), icon: DollarSign, hint: `Aujourd'hui : ${formatDA(data.revenueToday)}` },
+    { label: "Revenus 7 jours", value: formatDA(data.revenue7), icon: DollarSign, hint: `30 j : ${formatDA(data.revenue30)}` },
+    { label: "Commandes", value: data.totalOrders, icon: ShoppingBag, hint: `Panier moyen : ${formatDA(data.avgBasket)}` },
+    { label: "Nouvelles", value: data.newOrders, icon: Package, hint: `En préparation : ${data.preparingOrders}` },
+    { label: "Livrées", value: data.deliveredOrders, icon: Truck, hint: `Annulées : ${data.cancelledOrders}` },
+    { label: "Échanges en attente", value: data.exchangesPending, icon: Package, hint: "À traiter" },
+    { label: "Produits", value: data.productCount, icon: Tag, hint: `Utilisateurs : ${data.userCount}` },
   ];
+
+  const maxRev = Math.max(1, ...data.chart.map((c: any) => c.revenue));
+
   return (
-    <div className="grid gap-4 md:grid-cols-4">
-      {cards.map((c) => (
-        <div key={c.label} className="rounded-xl border border-border/60 bg-card p-5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{c.label}</div>
-            <c.icon className="h-4 w-4 text-gold" />
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-xl border border-border/60 bg-card p-5">
+            <div className="flex items-center justify-between">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">{c.label}</div>
+              <c.icon className="h-4 w-4 text-gold" />
+            </div>
+            <div className="mt-3 font-display text-2xl text-foreground">{c.value}</div>
+            <div className="mt-1 text-[11px] text-muted-foreground">{c.hint}</div>
           </div>
-          <div className="mt-3 font-display text-2xl text-foreground">{c.value}</div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="rounded-xl border border-border/60 bg-card p-5 lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-medium">Revenus — 7 derniers jours</h3>
+            <span className="text-xs text-muted-foreground">{formatDA(data.revenue7)}</span>
+          </div>
+          <div className="flex h-40 items-end gap-2">
+            {data.chart.map((c: any, i: number) => (
+              <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                <div
+                  className="w-full rounded-t bg-gradient-gold transition-all"
+                  style={{ height: `${(c.revenue / maxRev) * 100}%`, minHeight: c.revenue > 0 ? 4 : 0 }}
+                  title={`${formatDA(c.revenue)} • ${c.count} commande(s)`}
+                />
+                <span className="text-[10px] text-muted-foreground">{c.day}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
+
+        <div className="rounded-xl border border-border/60 bg-card p-5">
+          <h3 className="mb-4 font-medium">Stock faible</h3>
+          {data.lowStock.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Tous les stocks sont OK.</p>
+          ) : (
+            <ul className="space-y-2">
+              {data.lowStock.map((p: any) => (
+                <li key={p.id} className="flex items-center justify-between text-sm">
+                  <span className="truncate">{p.name}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] ${p.stock === 0 ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-500"}`}>
+                    {p.stock}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border/60 bg-card p-5">
+        <h3 className="mb-4 font-medium">Dernières commandes</h3>
+        {data.recentOrders.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucune commande.</p>
+        ) : (
+          <div className="divide-y divide-border/60">
+            {data.recentOrders.map((o: any) => (
+              <div key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs text-gold">{o.order_number}</span>
+                  <span className="text-muted-foreground">
+                    {(o.customer_first_name ?? "") + " " + (o.customer_last_name ?? "")} · {o.wilayas?.name_fr ?? ""}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="rounded-full border border-border/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">{o.status}</span>
+                  <span className="font-medium">{formatDA(Number(o.total))}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString("fr-FR")}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

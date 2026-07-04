@@ -169,10 +169,10 @@ export const saveSheetsConfigFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch = {
       id: "global",
-      orders_spreadsheet_id: data.orders_spreadsheet_id || null,
+      orders_spreadsheet_id: extractSpreadsheetId(data.orders_spreadsheet_id ?? null),
       orders_sheet_name: data.orders_sheet_name,
       orders_enabled: data.orders_enabled,
-      exchanges_spreadsheet_id: data.exchanges_spreadsheet_id || null,
+      exchanges_spreadsheet_id: extractSpreadsheetId(data.exchanges_spreadsheet_id ?? null),
       exchanges_sheet_name: data.exchanges_sheet_name,
       exchanges_enabled: data.exchanges_enabled,
     };

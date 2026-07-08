@@ -154,12 +154,13 @@ export async function syncExchangeToSheetsSafe(exchangeId: string) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: r } = await supabaseAdmin
       .from("exchange_requests")
-      .select("*, orders(order_number)")
+      .select("*, orders(order_number, order_items(product_name, quantity))")
       .eq("id", exchangeId)
       .maybeSingle();
     if (!r) return;
+    const signed = await signPhotos(r.photos);
     await ensureHeaders(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, EXCHANGE_HEADERS);
-    await appendRows(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, [exchangeRow(r)]);
+    await appendRows(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, [exchangeRow(r, signed)]);
   } catch (e) {
     console.error("[sheets] syncExchange error:", e);
   }

@@ -80,32 +80,53 @@ async function ensureHeaders(spreadsheetId: string, sheetName: string, headers: 
 const ORDER_HEADERS = [
   "N° Commande", "Date", "Statut", "Client", "Téléphone", "Téléphone 2",
   "Email", "Wilaya", "Commune", "Adresse", "Livraison", "Frais", "Sous-total", "Total",
-  "Produits", "Notes",
+  "Produits", "Quantités", "Notes",
 ];
 
 const EXCHANGE_HEADERS = [
-  "N° Demande", "Date", "Statut", "N° Commande", "Client", "Téléphone", "Motif", "Nb Photos",
+  "N° Demande", "Date", "Statut", "N° Commande", "Client", "Téléphone",
+  "Produits", "Motif", "Nb Photos", "Photos",
 ];
 
 function orderRow(o: any): any[] {
-  const items = (o.order_items ?? []).map((i: any) => `${i.quantity}× ${i.product_name}`).join(" | ");
+  const items = o.order_items ?? [];
+  const produits = items.map((i: any) => i.product_name).join(" | ");
+  const quantites = items.map((i: any) => i.quantity).join(" | ");
   return [
     o.order_number, new Date(o.created_at).toLocaleString("fr-FR"), o.status,
     `${o.customer_first_name ?? ""} ${o.customer_last_name ?? ""}`.trim(),
     o.customer_phone ?? "", o.customer_phone_alt ?? "", o.customer_email ?? "",
     o.wilayas?.name_fr ?? o.wilaya_id ?? "", o.commune ?? "", o.address ?? "",
     o.shipping_method ?? "", Number(o.shipping_cost ?? 0), Number(o.subtotal ?? 0), Number(o.total ?? 0),
-    items, o.notes ?? "",
+    produits, quantites, o.notes ?? "",
   ];
 }
 
-function exchangeRow(r: any): any[] {
+async function signPhotos(photos: string[] | null | undefined): Promise<string[]> {
+  const arr = photos ?? [];
+  if (!arr.length) return [];
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const out: string[] = [];
+  const EXPIRES = 60 * 60 * 24 * 365 * 10; // ~10 years
+  for (const p of arr) {
+    if (/^https?:\/\//.test(p)) { out.push(p); continue; }
+    const { data: s } = await supabaseAdmin.storage.from("exchange-photos").createSignedUrl(p, EXPIRES);
+    if (s?.signedUrl) out.push(s.signedUrl);
+  }
+  return out;
+}
+
+function exchangeRow(r: any, signedPhotos: string[]): any[] {
+  const items = r.orders?.order_items ?? [];
+  const produits = items.map((i: any) => `${i.quantity}× ${i.product_name}`).join(" | ");
   return [
     r.request_number, new Date(r.created_at).toLocaleString("fr-FR"), r.status,
     r.orders?.order_number ?? "", r.customer_name ?? "", r.customer_phone ?? "",
-    r.reason ?? "", (r.photos ?? []).length,
+    produits, r.reason ?? "", (r.photos ?? []).length,
+    signedPhotos.join(" | "),
   ];
 }
+
 
 /** Fire-and-forget style: called from other server fns. Never throws. */
 export async function syncOrderToSheetsSafe(orderId: string) {
@@ -133,12 +154,13 @@ export async function syncExchangeToSheetsSafe(exchangeId: string) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: r } = await supabaseAdmin
       .from("exchange_requests")
-      .select("*, orders(order_number)")
+      .select("*, orders(order_number, order_items(product_name, quantity))")
       .eq("id", exchangeId)
       .maybeSingle();
     if (!r) return;
+    const signed = await signPhotos(r.photos);
     await ensureHeaders(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, EXCHANGE_HEADERS);
-    await appendRows(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, [exchangeRow(r)]);
+    await appendRows(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, [exchangeRow(r, signed)]);
   } catch (e) {
     console.error("[sheets] syncExchange error:", e);
   }
@@ -230,13 +252,17 @@ export const backfillExchangesFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("exchange_requests")
-      .select("*, orders(order_number)")
+      .select("*, orders(order_number, order_items(product_name, quantity))")
       .order("created_at", { ascending: true })
       .limit(1000);
     if (error) throw error;
     await ensureHeaders(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, EXCHANGE_HEADERS);
     if (!rows?.length) return { ok: true, count: 0 };
-    const values = rows.map(exchangeRow);
+    const values: any[][] = [];
+    for (const r of rows) {
+      const signed = await signPhotos((r as any).photos);
+      values.push(exchangeRow(r, signed));
+    }
     for (let i = 0; i < values.length; i += 200) {
       await appendRows(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, values.slice(i, i + 200));
     }

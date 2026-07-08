@@ -80,32 +80,53 @@ async function ensureHeaders(spreadsheetId: string, sheetName: string, headers: 
 const ORDER_HEADERS = [
   "N° Commande", "Date", "Statut", "Client", "Téléphone", "Téléphone 2",
   "Email", "Wilaya", "Commune", "Adresse", "Livraison", "Frais", "Sous-total", "Total",
-  "Produits", "Notes",
+  "Produits", "Quantités", "Notes",
 ];
 
 const EXCHANGE_HEADERS = [
-  "N° Demande", "Date", "Statut", "N° Commande", "Client", "Téléphone", "Motif", "Nb Photos",
+  "N° Demande", "Date", "Statut", "N° Commande", "Client", "Téléphone",
+  "Produits", "Motif", "Nb Photos", "Photos",
 ];
 
 function orderRow(o: any): any[] {
-  const items = (o.order_items ?? []).map((i: any) => `${i.quantity}× ${i.product_name}`).join(" | ");
+  const items = o.order_items ?? [];
+  const produits = items.map((i: any) => i.product_name).join(" | ");
+  const quantites = items.map((i: any) => i.quantity).join(" | ");
   return [
     o.order_number, new Date(o.created_at).toLocaleString("fr-FR"), o.status,
     `${o.customer_first_name ?? ""} ${o.customer_last_name ?? ""}`.trim(),
     o.customer_phone ?? "", o.customer_phone_alt ?? "", o.customer_email ?? "",
     o.wilayas?.name_fr ?? o.wilaya_id ?? "", o.commune ?? "", o.address ?? "",
     o.shipping_method ?? "", Number(o.shipping_cost ?? 0), Number(o.subtotal ?? 0), Number(o.total ?? 0),
-    items, o.notes ?? "",
+    produits, quantites, o.notes ?? "",
   ];
 }
 
-function exchangeRow(r: any): any[] {
+async function signPhotos(photos: string[] | null | undefined): Promise<string[]> {
+  const arr = photos ?? [];
+  if (!arr.length) return [];
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const out: string[] = [];
+  const EXPIRES = 60 * 60 * 24 * 365 * 10; // ~10 years
+  for (const p of arr) {
+    if (/^https?:\/\//.test(p)) { out.push(p); continue; }
+    const { data: s } = await supabaseAdmin.storage.from("exchange-photos").createSignedUrl(p, EXPIRES);
+    if (s?.signedUrl) out.push(s.signedUrl);
+  }
+  return out;
+}
+
+function exchangeRow(r: any, signedPhotos: string[]): any[] {
+  const items = r.orders?.order_items ?? [];
+  const produits = items.map((i: any) => `${i.quantity}× ${i.product_name}`).join(" | ");
   return [
     r.request_number, new Date(r.created_at).toLocaleString("fr-FR"), r.status,
     r.orders?.order_number ?? "", r.customer_name ?? "", r.customer_phone ?? "",
-    r.reason ?? "", (r.photos ?? []).length,
+    produits, r.reason ?? "", (r.photos ?? []).length,
+    signedPhotos.join(" | "),
   ];
 }
+
 
 /** Fire-and-forget style: called from other server fns. Never throws. */
 export async function syncOrderToSheetsSafe(orderId: string) {

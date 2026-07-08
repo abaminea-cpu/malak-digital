@@ -252,13 +252,17 @@ export const backfillExchangesFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("exchange_requests")
-      .select("*, orders(order_number)")
+      .select("*, orders(order_number, order_items(product_name, quantity))")
       .order("created_at", { ascending: true })
       .limit(1000);
     if (error) throw error;
     await ensureHeaders(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, EXCHANGE_HEADERS);
     if (!rows?.length) return { ok: true, count: 0 };
-    const values = rows.map(exchangeRow);
+    const values: any[][] = [];
+    for (const r of rows) {
+      const signed = await signPhotos((r as any).photos);
+      values.push(exchangeRow(r, signed));
+    }
     for (let i = 0; i < values.length; i += 200) {
       await appendRows(cfg.exchanges_spreadsheet_id, cfg.exchanges_sheet_name, values.slice(i, i + 200));
     }

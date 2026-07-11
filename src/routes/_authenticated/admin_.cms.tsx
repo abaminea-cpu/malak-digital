@@ -19,6 +19,11 @@ import { FAQEditor } from "@/components/editor/sections/FAQEditor";
 import { TextBlockEditor } from "@/components/editor/sections/TextBlockEditor";
 import { ProgrammesEditor } from "@/components/editor/sections/ProgrammesEditor";
 import { CTAEditor } from "@/components/editor/sections/CTAEditor";
+import { BannerEditor } from "@/components/editor/sections/BannerEditor";
+import { TestimonialsEditor } from "@/components/editor/sections/TestimonialsEditor";
+import { GalleryEditor } from "@/components/editor/sections/GalleryEditor";
+import { VideoEditor } from "@/components/editor/sections/VideoEditor";
+import { SEOEditor } from "@/components/editor/sections/SEOEditor";
 import { Loader2, Save, RotateCcw, Monitor, Tablet, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin_/cms")({
@@ -33,6 +38,11 @@ const editorMap: Record<EditorType, React.ComponentType<{ value: any; onChange: 
   "text-block": TextBlockEditor,
   programmes: ProgrammesEditor,
   cta: CTAEditor,
+  banner: BannerEditor,
+  testimonials: TestimonialsEditor,
+  gallery: GalleryEditor,
+  video: VideoEditor,
+  seo: SEOEditor,
 };
 
 type Viewport = "desktop" | "tablet" | "mobile";

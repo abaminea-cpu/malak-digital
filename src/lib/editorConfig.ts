@@ -1,4 +1,15 @@
-export type EditorType = "hero" | "items-list" | "faq" | "text-block" | "programmes" | "cta";
+export type EditorType =
+  | "hero"
+  | "items-list"
+  | "faq"
+  | "text-block"
+  | "programmes"
+  | "cta"
+  | "banner"
+  | "testimonials"
+  | "gallery"
+  | "video"
+  | "seo";
 
 export interface SectionConfig {
   key: string;
@@ -20,6 +31,8 @@ export interface PortalConfig {
   pages: PageConfig[];
 }
 
+const seoSection: SectionConfig = { key: "seo", label: "SEO / Meta", type: "seo" };
+
 export const editorConfig: PortalConfig[] = [
   {
     key: "storefront",
@@ -30,8 +43,13 @@ export const editorConfig: PortalConfig[] = [
         label: "Accueil",
         previewPath: "/",
         sections: [
+          seoSection,
+          { key: "banner", label: "Bannière promo", type: "banner" },
           { key: "hero", label: "Hero", type: "hero" },
           { key: "trust", label: "Bandeau confiance", type: "items-list" },
+          { key: "testimonials", label: "Témoignages", type: "testimonials" },
+          { key: "gallery", label: "Galerie", type: "gallery" },
+          { key: "video", label: "Vidéo", type: "video" },
           { key: "cta", label: "Bloc CTA", type: "cta" },
           { key: "faq", label: "FAQ", type: "faq" },
         ],
@@ -41,8 +59,49 @@ export const editorConfig: PortalConfig[] = [
         label: "À propos",
         previewPath: "/about",
         sections: [
+          seoSection,
           { key: "intro", label: "Introduction", type: "text-block" },
           { key: "values", label: "Valeurs", type: "items-list" },
+          { key: "testimonials", label: "Témoignages", type: "testimonials" },
+        ],
+      },
+      {
+        key: "shop",
+        label: "Boutique",
+        previewPath: "/shop",
+        sections: [
+          seoSection,
+          { key: "banner", label: "Bannière promo", type: "banner" },
+          { key: "header", label: "En-tête", type: "text-block" },
+        ],
+      },
+      {
+        key: "contact",
+        label: "Contact",
+        previewPath: "/contact",
+        sections: [
+          seoSection,
+          { key: "intro", label: "Introduction", type: "text-block" },
+          { key: "faq", label: "FAQ", type: "faq" },
+        ],
+      },
+      {
+        key: "echange",
+        label: "Demande d'échange",
+        previewPath: "/echange",
+        sections: [
+          seoSection,
+          { key: "intro", label: "Introduction", type: "text-block" },
+          { key: "faq", label: "FAQ", type: "faq" },
+        ],
+      },
+      {
+        key: "blog",
+        label: "Blog",
+        previewPath: "/blog",
+        sections: [
+          seoSection,
+          { key: "header", label: "En-tête", type: "text-block" },
         ],
       },
     ],

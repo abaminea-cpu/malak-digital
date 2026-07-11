@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n";
 import { Mail, Phone, MapPin } from "lucide-react";
+import abmLogo from "@/assets/abm-logo.png.asset.json";
+
 
 export function Footer() {
   const { t } = useI18n();
@@ -41,8 +43,18 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-border/60">
-        <div className="container mx-auto px-4 py-4 text-center text-xs text-muted-foreground md:px-6">
-          © {year} Malak Digital. {t("footer.rights")}
+        <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-4 py-4 text-xs text-muted-foreground md:flex-row md:px-6">
+          <span>© {year} Malak Digital. {t("footer.rights")}</span>
+          <a
+            href="https://www.abm-design.fr/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1.5 transition-colors hover:border-gold/60 hover:text-foreground"
+            aria-label="Site développé par ABM Design"
+          >
+            <img src={abmLogo.url} alt="ABM Design" className="h-4 w-4 object-contain" />
+            <span>Dév par <span className="font-semibold text-foreground group-hover:text-gold">Abm Design</span></span>
+          </a>
         </div>
       </div>
     </footer>
